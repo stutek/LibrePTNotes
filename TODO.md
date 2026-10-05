@@ -13,7 +13,7 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 
 1. **Stranke:** lastna baza, ločena od LibrePT. Seznam strank; dodajanje stranke z imenom.
 2. **Zavihki strank:** gumb »Odpri beležke stranke« doda zavihek te stranke. Zavihek se izbere samo s klikom; prehoda na prejšnji ali naslednji zavihek ni. Zavihek se zapre z ✕; odprti zavihki ostanejo po ponovnem nalaganju.
-3. **Zapisi:** stranka ima več zapisov. Zapis je navadno besedilo z metapodatkom datuma (`YYYY-MM-DD HH:MM`, nastavljen ob ustvarjanju), ki določa vrstni red.
+3. **Zapisi:** stranka ima več zapisov. Zapis je navadno besedilo z metapodatkom datuma (`YYYY-MM-DD HH:MM`, nastavljen ob ustvarjanju), ki določa vrstni red. Datum je mogoče urediti; čas nastanka (`created`) ostane ločen in se ne spreminja (Simon, 2026-10-05 17:13:50.542).
 4. **Kretnja L, enaka kot v LibrePT** (`src/gesture/planPeek.js`): pritisk in zadržanje zoži trenutni zapis; poteg vstran pokaže prejšnji ali naslednji zapis iste stranke pod njim; ko je odkrite vsaj 25 % širine, poteg navzgor za 64 px odpre odkriti zapis; vsak spust brez potega navzgor se vrne nazaj. Kadar je trenutni zapis najnovejši, je na strani naslednjega kartica »Nov zapis«; L jo odpre kot nov zapis s trenutnim datumom.
 5. **Barvanje markdowna v urejevalniku:** besedilo ostane navadno; barvajo se naslovi, krepko in ležeče, seznami, citati, koda (vrstična in bloki) in povezave, v barvah teme VS Code (Dark+ ali Light+ po nastavitvi telefona).
 6. **Brez povezave:** PWA z imenom LibrePTNotes in lastno ikono; service worker z obsegom `/LibrePTNotes/`; deluje brez povezave.
@@ -36,6 +36,7 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 - **Barve markdowna** (2026-10-05 09:30:55.822): približek Dark+ / Light+ (naslovi, krepko, ležeče, citati, koda, povezave, oznake seznamov); samo barva, brez krepke pisave, da širina znakov ostane enaka. Urejevalnik je enakopisen.
 - **Varnostna kopija: vedno šifrirana** (2026-10-05 09:30:55.822): ovojnica je v zapisu LibrePT (`formatVersion` 6), vsebina nosi `app: "libreptnotes"`; obnovitev zavrne datoteko brez te oznake. Obnovitev zamenja vse (kot v LibrePT), po potrditvi. Ključ je v `meta` pod `backupKey`.
 - **Brez brisanja strank in zapisov** (2026-10-05 09:30:55.822): specifikacija ga ne omenja; dodano ni.
+- **Urejanje datuma z besedilnim poljem** (2026-10-05 17:13:50.542): dotik datuma v glavi zapisa odpre polje z vrednostjo `YYYY-MM-DD HH:MM`, ki se ob neveljavnem vnosu ne shrani. Ne `datetime-local`, ker telefon v njem prikaže uro po svojih nastavitvah, tudi 12-urno (AGENT_RULES: ura 24-urna). Po spremembi se vrstni red preuredi, zapis ostane trenutni.
 
 ## 3. Odprto
 
