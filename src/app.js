@@ -3,6 +3,7 @@ import { createStore } from "./data/store.js";
 import { idbBackend, openDb } from "./data/idbBackend.js";
 import { t } from "./i18n.js";
 import { renderClientList } from "./ui/clientList.js";
+import { flushPendingSave, renderNoteView } from "./ui/noteView.js";
 import { renderTabs } from "./ui/tabs.js";
 
 const tabsRoot = document.getElementById("tabs");
@@ -15,12 +16,12 @@ async function render() {
     t,
     clients,
     tabs,
-    onSelect: async (id) => { await store.setActiveTab(id); render(); },
-    onClose: async (id) => { await store.closeTab(id); render(); },
+    onSelect: async (id) => { await flushPendingSave(); await store.setActiveTab(id); render(); },
+    onClose: async (id) => { await flushPendingSave(); await store.closeTab(id); render(); },
   });
   const active = clients.find((c) => c.id === tabs.active);
   if (active) {
-    viewRoot.replaceChildren(); // pogled zapisov pride v koraku 4
+    await renderNoteView(viewRoot, { t, store, client: active, show: render });
     return;
   }
   renderClientList(viewRoot, {

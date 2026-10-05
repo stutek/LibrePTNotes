@@ -199,6 +199,8 @@ input[type="text"] {
 .note-body {
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding-bottom: var(--safe-bottom);
 }
@@ -208,11 +210,11 @@ input[type="text"] {
 }
 .note-empty button { margin-top: 12px; }
 
-/* Barvanje: prosojen textarea nad barvanim pre; enaka pisava, odmik in prelom. Višino textarea
-   določi koda iz vsebine, zato se drsi samo .note-body in poravnava ostane sama od sebe. */
+/* Barvanje: prosojen textarea nad barvanim pre; enaka pisava, odmik in prelom. Višino določa pre v
+   toku, textarea ga prekrije (absolutno), zato višine ne nastavlja koda in drsi samo .note-body. */
 .md-wrap {
   position: relative;
-  min-height: 100%;
+  flex: 1 0 auto;
 }
 .md-highlight, .md-input {
   display: block;
@@ -233,12 +235,12 @@ input[type="text"] {
   pointer-events: none;
 }
 .md-wrap .md-highlight {
-  position: absolute;
-  inset: 0;
+  min-height: 60vh;
 }
 .md-input {
-  position: relative;
-  min-height: 60vh;
+  position: absolute;
+  inset: 0;
+  height: 100%;
   resize: none;
   overflow: hidden;
   background: transparent;
