@@ -273,3 +273,12 @@ input[type="text"] {
 .dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 .dialog h2 { margin: 0 0 8px; font-size: 18px; }
 .dialog .row button { flex: 1 1 auto; }
+
+/* Drsnik je zdaj .note-body: touch-action velja le do najbližjega drsnega vsebnika (planPeek.css). */
+.plan-peek-blanket .note-body {
+  touch-action: pan-y pinch-zoom;
+}
+/* Spodnji plasti prikažeta besedilo kot urejevalnik, a nepremično. */
+.plan-peek-under .md-highlight {
+  padding: 0 4px;
+}

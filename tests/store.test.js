@@ -122,3 +122,13 @@ test("uvoz zavrne napačno obliko in ne spremeni baze", async () => {
   await assert.rejects(() => store.importData({ clients: [{ id: "x", name: "X" }], notes: [{ id: "n", clientId: "zlo", date: "d", text: "" }] }));
   assert.equal((await store.listClients()).length, 1);
 });
+
+test("draftNote ne shrani, commitNote shrani in nastavi trenutni zapis", async () => {
+  const { store } = make();
+  const c = await store.addClient("Ana");
+  const draft = store.draftNote(c.id, "t");
+  assert.equal((await store.listNotes(c.id)).length, 0);
+  assert.equal(draft.date, "2026-10-05 09:00");
+  await store.commitNote(draft);
+  assert.equal((await store.currentNote(c.id)).id, draft.id);
+});

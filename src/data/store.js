@@ -29,14 +29,20 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
     await backend.put("meta", { key: CURRENT_PREFIX + clientId, noteId });
   }
 
-  // Nov zapis je takoj trenutni: kretnja L ga odpre s trenutnim datumom.
-  async function addNote(clientId, text = "") {
+  // Zapis se lahko sestavi sinhrono (draftNote), da ga kretnja prikaže v istem opravilu, in shrani
+  // pozneje (commitNote). Nov zapis je takoj trenutni: kretnja L ga odpre s trenutnim datumom.
+  function draftNote(clientId, text = "") {
     const date = now();
-    const note = { id: newId(), clientId, date: formatDateTime(date), created: date.getTime(), text };
+    return { id: newId(), clientId, date: formatDateTime(date), created: date.getTime(), text };
+  }
+
+  async function commitNote(note) {
     await backend.put("notes", note);
-    await setCurrentNote(clientId, note.id);
+    await setCurrentNote(note.clientId, note.id);
     return note;
   }
+
+  const addNote = (clientId, text = "") => commitNote(draftNote(clientId, text));
 
   async function updateNoteText(id, text) {
     const note = await backend.get("notes", id);
@@ -114,5 +120,5 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
     });
   }
 
-  return { addClient, listClients, addNote, updateNoteText, listNotes, currentNote, setCurrentNote, getTabs, openTab, closeTab, setActiveTab, exportData, importData, backend };
+  return { addClient, listClients, addNote, draftNote, commitNote, updateNoteText, listNotes, currentNote, setCurrentNote, getTabs, openTab, closeTab, setActiveTab, exportData, importData, backend };
 }
