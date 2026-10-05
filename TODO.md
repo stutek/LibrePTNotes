@@ -18,6 +18,7 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 5. **Barvanje markdowna v urejevalniku:** besedilo ostane navadno; barvajo se naslovi, krepko in ležeče, seznami, citati, koda (vrstična in bloki) in povezave, v barvah teme VS Code (Dark+ ali Light+ po nastavitvi telefona).
 6. **Brez povezave:** PWA z imenom LibrePTNotes in lastno ikono; service worker z obsegom `/LibrePTNotes/`; deluje brez povezave.
 7. **Objava:** GitHub Pages iz tega repa prek GitHub Actions na `https://stutek.github.io/LibrePTNotes/`; objavi se samo `src/`.
+8. **Varnostna kopija** (Simon, 2026-10-05 11:05:06.688): gumb »Izvozi« prenese vse stranke in zapise kot datoteko JSON; »Uvozi« jih po potrditvi naloži nazaj in nadomesti obstoječe.
 
 ## 2. Odločitve agenta (preglej)
 
@@ -28,8 +29,8 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 
 ## 3. Odprto
 
-- [ ] **Varnostna kopija** (2026-10-05 10:53:59.617): podatki živijo samo v brskalniku, ki jih lahko izbriše (npr. ob čiščenju podatkov strani). *Blokira:* ali aplikacija potrebuje izvoz in uvoz. Rok: ni podatka.
-- [ ] **LibrePT briše predpomnilnik LibrePTNotes** (2026-10-05 11:01:54.206): izvor `stutek.github.io` je skupen, LibrePT pa ob vsaki posodobitvi izbriše vse predpomnilnike razen svojih (LibrePT `src/sw/cacheManifest.js` `deleteObsoleteCaches`, `src/controllers/appLifecycleController.js` ob napaki celovitosti). Po posodobitvi LibrePT se LibrePTNotes brez povezave ne odpre, dokler je enkrat ne odpreš s povezavo. Popravek v LibrePT: brisati samo ključe s predpono `librept-` (`libreptnotes-` se s to predpono ne ujema). Do takrat LibrePTNotes ob vsakem zagonu s povezavo predpomnilnik napolni znova. *Blokira:* zanesljivo delo brez povezave (§1 točka 6).
+- [x] **Varnostna kopija** (2026-10-05 10:53:59.617; odločeno 2026-10-05 11:05:06.688): izvoz in uvoz JSON, §1 točka 8.
+- [ ] **LibrePT briše predpomnilnik LibrePTNotes** (2026-10-05 11:01:54.206): izvor `stutek.github.io` je skupen, LibrePT pa ob vsaki posodobitvi izbriše vse predpomnilnike razen svojih (LibrePT `src/sw/cacheManifest.js` `deleteObsoleteCaches`, `src/controllers/appLifecycleController.js` ob napaki celovitosti). Po posodobitvi LibrePT se LibrePTNotes brez povezave ne odpre, dokler je enkrat ne odpreš s povezavo. Popravek v LibrePT (Simon odobril 2026-10-05 11:05:06.688): brisati samo ključe s predpono `librept-` (`libreptnotes-` se s to predpono ne ujema). Do takrat LibrePTNotes ob vsakem zagonu s povezavo predpomnilnik napolni znova. *Blokira:* zanesljivo delo brez povezave (§1 točka 6).
 
 ## 4. Koraki za sejo v oblaku
 
@@ -38,4 +39,5 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 3. Stranke in zavihki.
 4. Zapisi z datumom in barvanje markdowna.
 5. Kretnja L: priklop `src/gesture/planPeek.js` na zapis.
-6. Preizkus v brskalniku pri 390 px; v telesu commita opis, kaj je bilo preverjeno.
+6. Izvoz in uvoz (§1 točka 8) s testi `node --test`.
+7. Preizkus v brskalniku pri 390 px; v telesu commita opis, kaj je bilo preverjeno.
