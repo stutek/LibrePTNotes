@@ -28,6 +28,7 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 ## 3. Odprto
 
 - [ ] **Varnostna kopija** (2026-10-05 10:53:59.617): podatki živijo samo v brskalniku, ki jih lahko izbriše (npr. ob čiščenju podatkov strani). *Blokira:* ali aplikacija potrebuje izvoz in uvoz. Rok: ni podatka.
+- [ ] **LibrePT briše predpomnilnik LibrePTNotes** (2026-10-05 11:01:54.206): izvor `stutek.github.io` je skupen, LibrePT pa ob vsaki posodobitvi izbriše vse predpomnilnike razen svojih (LibrePT `src/sw/cacheManifest.js` `deleteObsoleteCaches`, `src/controllers/appLifecycleController.js` ob napaki celovitosti). Po posodobitvi LibrePT se LibrePTNotes brez povezave ne odpre, dokler je enkrat ne odpreš s povezavo. Popravek v LibrePT: brisati samo ključe s predpono `librept-` (`libreptnotes-` se s to predpono ne ujema). Do takrat LibrePTNotes ob vsakem zagonu s povezavo predpomnilnik napolni znova. *Blokira:* zanesljivo delo brez povezave (§1 točka 6).
 
 ## 4. Koraki za sejo v oblaku
 
