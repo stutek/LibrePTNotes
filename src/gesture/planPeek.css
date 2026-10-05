@@ -1,0 +1,271 @@
+/* Kopija iz LibrePT: src/modules/clipboard/planPeek.css, commit 403715f9 (MIT, Simon Tutek). */
+/* planPeek.css — the blanket drag: press-and-hold narrows and densifies the
+   current plan, a sideways drag pulls it aside to reveal the previous/next plan drawn underneath.
+   Behaviour lives in modules/clipboard/planPeek.js and controllers/planPeekController.js; this file
+   owns only what the classes they toggle LOOK like (docs/ARCHITECTURE.md "look and layout live
+   only in CSS"). Colours come from theme tokens throughout, so every theme gets the drag
+   (ruled 2026-09-14) without a line of JS caring which one is active.
+
+   What planPeek.js's classes look like: the blanket's narrow, dense `.is-held` state (denser by the
+   cards' own padding, never by a deeper stack overlap, which would hide the row a collapsed card
+   needs read); the spring-back transition; the clipped-preview and chosen-side visibility of the two
+   under-layers; the "Slide up to open" label; the create-a-plan card; the Today button. It also sets
+   `touch-action: pan-y` on the clipboard body, because touch-action stops at the nearest scroll
+   container. It honours prefers-reduced-motion. */
+
+/* The current plan: title bar, client tabs and clipboard body, all as one unit so they move
+   together. Sits above the two under-layers by DOM order and paints opaque, so nothing further
+   than `--plan-pull` needs to be said about what covers what. */
+.plan-peek-blanket {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+  z-index: 2;
+  background: var(--bg-color);
+  transform: translateX(var(--plan-pull, 0px));
+  /* Vertical stays the browser's own scroll; only a horizontal move is ours (planPeek.js
+     preventDefaults it once the axis locks to "x"). pinch-zoom too: pan-y alone switches off the
+     two-finger zoom across the whole clipboard, which a trainer who cannot read small text needs. */
+  touch-action: pan-y pinch-zoom;
+  /* A mouse drag would otherwise select the title/exercise text under the pointer, and the next
+     press on selected text starts the browser's own drag instead of ours — found via the
+     prototype's own comment (a pull stopping dead at 20px, pointercancel). */
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* …and again on the body, because touch-action is only intersected up to the nearest SCROLL
+   CONTAINER: a finger on a deck card inside .clipboard-body (overflow: auto) never sees the
+   blanket's pan-y, the browser takes the sideways move as its own pan and cancels the pointer, and
+   the plan does not move at all. Found in step 4 with emulated touch; the mouse-driven tests could
+   not see it. A scroller further in (a card's own) still decides for itself. */
+.plan-peek-blanket .clipboard-body {
+  touch-action: pan-y pinch-zoom;
+}
+.plan-peek-blanket.is-springing {
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.plan-peek-blanket.pulled-right {
+  box-shadow: -10px 0 18px -8px rgba(0, 0, 0, 0.35);
+}
+.plan-peek-blanket.pulled-left {
+  box-shadow: 10px 0 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+/* Held (press-and-hold, before any pull, or throughout a horizontal drag): the plan narrows so the
+   neighbour's edge shows on each side — 60px, measured against the demo plan on a 390px phone so no
+   exercise name is cut (Simon, 2026-09-14) — and its cards get denser (below). Narrowing animates
+   only while ANIMATING (is-animating-held), never as a permanent transition — a spring-back or a
+   client switch must not visibly "un-narrow" mid-render. */
+.plan-peek-blanket.is-held {
+  margin-inline: 60px;
+}
+.plan-peek-blanket.is-animating-held,
+.plan-peek-blanket.is-animating-held .exercise-deck-card {
+  transition: margin 0.2s ease, padding 0.2s ease;
+}
+/* Denser by the cards' own padding, not by a larger stack overlap: a collapsed card's peeking row
+   needs 29px of its 37 to be read (exerciseDeckOfCards.css), and the Spreadsheet theme
+   sets its own overlap anyway, so a deeper overlap hid rows in one theme and did nothing in another. */
+.plan-peek-blanket.is-held .exercise-deck-card {
+  padding-block: 3px;
+}
+/* 120px narrower, a card's status badge ("Past: 2026-07-20") wrapped onto three lines and made its row
+   taller right under the finger — seen on the demo data. The name beside it gives way instead. */
+.plan-peek-blanket.is-held .deck-card-status {
+  white-space: nowrap;
+}
+
+/* The neighbour plans, drawn behind the blanket. Each owns its own vertical scroll.
+
+   ALIGNED BY THE MOVEMENT, not by the scroll (Simon, 2026-09-30, replacing the choice of
+   2026-09-14 to show the plan from its top). That earlier choice refused to align the two plans by
+   SCROLL POSITION, and it was right to: two sessions' scrolls share no rows, so matching them
+   compares nothing. A movement with the same name in both plans is a shared row, which is what
+   makes this alignment mean something — the sheet slides until last time's bench press sits level
+   with the bench press card in focus. planPeekController.js measures the shift into
+   `--peek-align`; with no matching movement the property is absent and the plan shows from its top,
+   exactly as before. */
+.plan-peek-under {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 10px calc(24px + var(--safe-bottom, 0px));
+  visibility: hidden;
+  background: var(--bg-color);
+}
+
+/* The alignment itself, and only under the blanket: the same sheet drawn anywhere else is not
+   being compared with a card in focus, so it is never shifted. Transform rather than a margin, so
+   nothing above the sheet moves and no scroll height changes as the focus moves from card to card. */
+.plan-peek-under .plan-sheet {
+  transform: translateY(var(--peek-align, 0px));
+}
+
+/* Held with no side chosen yet: both neighbours show, each clipped to the half nearest its edge —
+   so a trainer who has only started the hold sees a preview of both directions at once. */
+.plan-peek-blanket.is-held ~ .plan-peek-under {
+  visibility: visible;
+}
+.plan-peek-blanket.is-held:not(.side-past):not(.side-future) ~ .plan-peek-under-past {
+  clip-path: inset(0 50% 0 0);
+}
+.plan-peek-blanket.is-held:not(.side-past):not(.side-future) ~ .plan-peek-under-future {
+  clip-path: inset(0 0 0 50%);
+}
+/* A side chosen (the drag's axis and direction are known): only that neighbour, uncropped; the
+   other goes back to hidden rather than staying half-visible behind the blanket. */
+.plan-peek-under.is-side-chosen {
+  visibility: visible;
+  clip-path: none;
+}
+.plan-peek-blanket.side-past ~ .plan-peek-under-future,
+.plan-peek-blanket.side-future ~ .plan-peek-under-past {
+  visibility: hidden;
+}
+
+.plan-peek-under-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 4px 8px;
+}
+.plan-peek-under-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plan-peek-under-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+/* The client's own tab, matching the live client-tabs-bar's look closely enough to read as the
+   same kind of control without literally being one — this is never tapped. */
+.plan-peek-under-tab {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+/* The next plan is uncovered from the right, so its rows end at the right edge. */
+.plan-peek-under-future .plan-sheet-row {
+  justify-content: flex-end;
+}
+.plan-peek-under-future .plan-peek-under-head {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* ---- Step 4: opening what the pull uncovered ---------------------------------------------------- */
+
+/* Released past the threshold, the blanket slides the rest of the way off before the neighbour
+   opens (planPeek.js's LEAVE_MS). */
+.plan-peek-blanket.is-leaving {
+  transition: transform 0.22s ease-in;
+}
+
+/* What the upward stroke will do. Both wordings are in the markup; `is-open-ready` (planPeek.js)
+   picks one, so arming the gesture never re-renders the layer mid-drag. The "slide up" wording sits
+   on a filled --primary cell, as in the prototype, so it reads as a different state and not a new
+   line of the plan. */
+.plan-peek-under-label {
+  display: flex;
+  padding: 0 4px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.plan-peek-under-past .plan-peek-under-label {
+  color: var(--temporal-past);
+}
+.plan-peek-under-future .plan-peek-under-label {
+  color: var(--temporal-future);
+  justify-content: flex-end;
+}
+.plan-peek-label-open {
+  display: none;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.plan-peek-under.is-open-ready .plan-peek-label-rest {
+  display: none;
+}
+.plan-peek-under.is-open-ready .plan-peek-label-open {
+  display: inline-block;
+}
+
+/* No previous plan: one short line where the plan would be. */
+.plan-peek-under-empty {
+  margin: 0;
+  padding: 12px 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* No next plan: the card offering to create one, right-aligned like the next plan it stands in for.
+   The "Create a plan" cell looks like a button without being one — nothing under the blanket is
+   tapped; the upward stroke after the pull opens the planning form. */
+.plan-peek-create-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 18px 12px;
+  text-align: right;
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+.plan-peek-create-card strong {
+  color: var(--text-main);
+}
+.plan-peek-create-cell {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--temporal-future);
+  border-radius: 6px;
+  color: var(--temporal-future);
+  font-weight: 700;
+}
+.plan-peek-under.is-open-ready .plan-peek-create-cell {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Today, on the title bar: a real touch target, glyph and word on one line. */
+.plan-peek-today {
+  min-height: 44px;
+  padding: 0 12px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-peek-blanket,
+  .plan-peek-blanket.is-springing,
+  .plan-peek-blanket.is-animating-held,
+  .plan-peek-blanket.is-leaving {
+    transition: none;
+  }
+}
