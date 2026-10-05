@@ -2,15 +2,20 @@
 import { createStore } from "./data/store.js";
 import { idbBackend, openDb } from "./data/idbBackend.js";
 import { t } from "./i18n.js";
+import { createBackupKeyStore } from "./data/backupKeyStore.js";
+import { renderBackupSection } from "./ui/backupSection.js";
 import { renderClientList } from "./ui/clientList.js";
 import { flushPendingSave, renderNoteView } from "./ui/noteView.js";
+import { setupPasswordDialog } from "./ui/passwordDialog.js";
 import { renderTabs } from "./ui/tabs.js";
 
 const tabsRoot = document.getElementById("tabs");
 const viewRoot = document.getElementById("view");
 let store;
+let keyStore;
+let dialog;
 
-async function render() {
+async function render(status) {
   const [clients, tabs] = await Promise.all([store.listClients(), store.getTabs()]);
   renderTabs(tabsRoot, {
     t,
@@ -29,11 +34,15 @@ async function render() {
     clients,
     onAdd: async (name) => { await store.addClient(name); render(); },
     onOpen: async (id) => { await store.openTab(id); render(); },
+    extra: await renderBackupSection({ t, store, keyStore, dialog, onChange: render, status }),
   });
 }
 
 async function start() {
-  store = createStore(idbBackend(await openDb()));
+  const backend = idbBackend(await openDb());
+  store = createStore(backend);
+  keyStore = createBackupKeyStore(backend);
+  dialog = setupPasswordDialog({ t, keyStore });
   await render();
 }
 

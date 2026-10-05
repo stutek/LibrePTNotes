@@ -43,6 +43,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body {
   background: var(--bg-color);
@@ -281,4 +282,16 @@ input[type="text"] {
 /* Spodnji plasti prikažeta besedilo kot urejevalnik, a nepremično. */
 .plan-peek-under .md-highlight {
   padding: 0 4px;
+}
+
+/* Geslo je dolgo šest besed: v celoti vidno v več vrsticah, da ga je mogoče prepisati na papir. */
+.dialog textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-color);
+  color: var(--text-main);
+  font: 16px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  resize: none;
 }
