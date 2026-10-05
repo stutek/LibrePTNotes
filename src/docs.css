@@ -1,0 +1,82 @@
+/* Slogi generiranih dokumentov (privacy.html; agent_tools/render_docs.py). Ne nalaga nič zunanjega.
+   Barve sledijo temi telefona, kot aplikacija; lastnosti so lokalne za dokumente, ker ta list in
+   app.css nista nikoli naložena skupaj. */
+:root {
+  --doc-bg: #ffffff;
+  --doc-text: #000000;
+  --doc-muted: #616161;
+  --doc-border: #d0d0d0;
+  --doc-link: #0000ff;
+  --doc-code-bg: #f3f3f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --doc-bg: #1e1e1e;
+    --doc-text: #d4d4d4;
+    --doc-muted: #9d9d9d;
+    --doc-border: #3c3c3c;
+    --doc-link: #3794ff;
+    --doc-code-bg: #252526;
+  }
+}
+
+html {
+  background: var(--doc-bg);
+  color: var(--doc-text);
+  font: 16px / 1.55 system-ui, sans-serif;
+}
+body {
+  margin: 0;
+  background: var(--doc-bg);
+}
+.doc {
+  box-sizing: border-box;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 16px 16px 8px;
+  overflow-wrap: anywhere;
+}
+.doc h1 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0.5rem 0 1rem;
+}
+.doc h2 {
+  font-size: 1.15rem;
+  margin: 1.6rem 0 0.4rem;
+}
+.doc p,
+.doc ul,
+.doc ol {
+  margin: 0.5rem 0;
+}
+.doc ul,
+.doc ol {
+  padding-left: 1.4rem;
+}
+.doc a,
+.doc-back a {
+  color: var(--doc-link);
+}
+.doc code {
+  padding: 0 0.25em;
+  border-radius: 3px;
+  background: var(--doc-code-bg);
+  font: 0.9em ui-monospace, monospace;
+}
+.doc table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.doc th,
+.doc td {
+  border: 1px solid var(--doc-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+.doc-back {
+  box-sizing: border-box;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+}
