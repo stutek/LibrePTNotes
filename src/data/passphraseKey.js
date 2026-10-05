@@ -30,8 +30,18 @@ export function randomIv(cryptoImpl = globalThis.crypto) {
 }
 
 // `iterations` je argument, ker se datoteka odpre s številom, s katerim je bila napisana.
-export async function deriveAesKey(passphrase, salt, { iterations = KDF_ITERATIONS, extractable = false, cryptoImpl = globalThis.crypto } = {}) {
-  const material = await cryptoImpl.subtle.importKey("raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]);
+export async function deriveAesKey(
+  passphrase,
+  salt,
+  { iterations = KDF_ITERATIONS, extractable = false, cryptoImpl = globalThis.crypto } = {},
+) {
+  const material = await cryptoImpl.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(passphrase),
+    "PBKDF2",
+    false,
+    ["deriveKey"],
+  );
   return cryptoImpl.subtle.deriveKey(
     { name: "PBKDF2", salt, iterations, hash: KDF_HASH },
     material,
@@ -44,9 +54,30 @@ export async function deriveAesKey(passphrase, salt, { iterations = KDF_ITERATIO
 // Šest besed iz kratkega seznama: trener jo lahko prepiše na papir, zato je berljiva, ne naključni
 // znaki. Seznam je enak kot v LibrePT.
 const PASSPHRASE_WORDS = [
-  "anchor", "barbell", "cadence", "deadlift", "elbow", "flywheel", "gravity", "hinge",
-  "impulse", "jumprope", "kettle", "lever", "mobility", "nordic", "overhead", "posture",
-  "quadrant", "rowing", "sprint", "tempo", "unrack", "vertical", "warmup", "zercher",
+  "anchor",
+  "barbell",
+  "cadence",
+  "deadlift",
+  "elbow",
+  "flywheel",
+  "gravity",
+  "hinge",
+  "impulse",
+  "jumprope",
+  "kettle",
+  "lever",
+  "mobility",
+  "nordic",
+  "overhead",
+  "posture",
+  "quadrant",
+  "rowing",
+  "sprint",
+  "tempo",
+  "unrack",
+  "vertical",
+  "warmup",
+  "zercher",
 ];
 
 export function generatePassphrase(cryptoImpl = globalThis.crypto, wordCount = 6) {

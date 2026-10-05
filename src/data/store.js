@@ -8,7 +8,10 @@ const TABS_KEY = "tabs";
 const CURRENT_PREFIX = "current:";
 const COLLATOR = new Intl.Collator("sl");
 
-export function createStore(backend, { now = () => new Date(), newId = () => crypto.randomUUID() } = {}) {
+export function createStore(
+  backend,
+  { now = () => new Date(), newId = () => crypto.randomUUID() } = {},
+) {
   async function listNotes(clientId) {
     return sortNotes((await backend.getAll("notes")).filter((n) => n.clientId === clientId));
   }
@@ -23,6 +26,14 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
 
   async function listClients() {
     return (await backend.getAll("clients")).sort((a, b) => COLLATOR.compare(a.name, b.name));
+  }
+
+  async function renameClient(id, name) {
+    const clean = String(name ?? "").trim();
+    if (!clean) throw new Error("ime stranke je obvezno");
+    const client = await backend.get("clients", id);
+    if (!client) throw new Error("stranka ne obstaja");
+    await backend.put("clients", { ...client, name: clean });
   }
 
   async function setCurrentNote(clientId, noteId) {
@@ -58,6 +69,34 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
     return notes.find((n) => n.id === saved?.noteId) || notes[notes.length - 1];
   }
 
+  // Zbriše stranko, vse njene zapise, zapomnjen trenutni zapis in zavihek.
+  async function deleteClient(id) {
+    for (const note of await listNotes(id)) await backend.delete("notes", note.id);
+    await backend.delete("meta", CURRENT_PREFIX + id);
+    await closeTab(id);
+    await backend.delete("clients", id);
+  }
+
+  // Zbriše zapis. Če je bil trenutni, postane trenutni prejšnji (starejši), sicer naslednji; vrne
+  // id novega trenutnega zapisa ali null, ko stranka nima več zapisov.
+  async function deleteNote(id) {
+    const note = await backend.get("notes", id);
+    if (!note) throw new Error("zapis ne obstaja");
+    const before = await listNotes(note.clientId);
+    const index = before.findIndex((n) => n.id === id);
+    const wasCurrent = (await currentNote(note.clientId))?.id === id;
+    await backend.delete("notes", id);
+    const rest = before.filter((n) => n.id !== id);
+    if (!rest.length) {
+      await backend.delete("meta", CURRENT_PREFIX + note.clientId);
+      return null;
+    }
+    if (!wasCurrent) return (await currentNote(note.clientId)).id;
+    const next = rest[Math.max(0, index - 1)];
+    await setCurrentNote(note.clientId, next.id);
+    return next.id;
+  }
+
   async function getTabs() {
     const saved = await backend.get("meta", TABS_KEY);
     const open = saved?.open || [];
@@ -75,7 +114,10 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
 
   async function closeTab(clientId) {
     const { open, active } = await getTabs();
-    await saveTabs(open.filter((id) => id !== clientId), active === clientId ? null : active);
+    await saveTabs(
+      open.filter((id) => id !== clientId),
+      active === clientId ? null : active,
+    );
   }
 
   // null je seznam strank; zavihek, ki ni odprt, se ne izbere.
@@ -86,7 +128,9 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
   }
 
   async function exportData() {
-    const clients = (await backend.getAll("clients")).sort((a, b) => (a.created - b.created) || (a.id < b.id ? -1 : 1));
+    const clients = (await backend.getAll("clients")).sort(
+      (a, b) => a.created - b.created || (a.id < b.id ? -1 : 1),
+    );
     return { clients, notes: sortNotes(await backend.getAll("notes")) };
   }
 
@@ -94,11 +138,17 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
     if (!Array.isArray(clients) || !Array.isArray(notes)) throw new Error("neveljavni podatki");
     const ids = new Set();
     for (const c of clients) {
-      if (typeof c?.id !== "string" || typeof c?.name !== "string" || !c.name.trim()) throw new Error("neveljavna stranka");
+      if (typeof c?.id !== "string" || typeof c?.name !== "string" || !c.name.trim())
+        throw new Error("neveljavna stranka");
       ids.add(c.id);
     }
     for (const n of notes) {
-      if (typeof n?.id !== "string" || !ids.has(n.clientId) || typeof n.date !== "string" || typeof n.text !== "string") {
+      if (
+        typeof n?.id !== "string" ||
+        !ids.has(n.clientId) ||
+        typeof n.date !== "string" ||
+        typeof n.text !== "string"
+      ) {
         throw new Error("neveljaven zapis");
       }
     }
@@ -109,16 +159,49 @@ export function createStore(backend, { now = () => new Date(), newId = () => cry
   async function importData(data) {
     validate(data);
     const ids = new Set(data.clients.map((c) => c.id));
-    const kept = (await backend.getAll("meta")).filter((m) => m.key !== TABS_KEY && !m.key.startsWith(CURRENT_PREFIX));
+    const kept = (await backend.getAll("meta")).filter(
+      (m) => m.key !== TABS_KEY && !m.key.startsWith(CURRENT_PREFIX),
+    );
     const saved = await backend.get("meta", TABS_KEY);
     const open = (saved?.open || []).filter((id) => ids.has(id));
-    const meta = [...kept, { key: TABS_KEY, open, active: open.includes(saved?.active) ? saved.active : null }];
+    const meta = [
+      ...kept,
+      { key: TABS_KEY, open, active: open.includes(saved?.active) ? saved.active : null },
+    ];
+    // Samo znana polja: uvožena datoteka ne vnese tujih ključev (npr. `__proto__`) v zapise.
+    const created = (v) => (Number.isFinite(v) ? v : 0);
     await backend.replaceAll({
-      clients: data.clients.map((c) => ({ created: 0, ...c })),
-      notes: data.notes.map((n) => ({ created: 0, ...n })),
+      clients: data.clients.map((c) => ({ id: c.id, name: c.name, created: created(c.created) })),
+      notes: data.notes.map((n) => ({
+        id: n.id,
+        clientId: n.clientId,
+        date: n.date,
+        created: created(n.created),
+        text: n.text,
+      })),
       meta,
     });
   }
 
-  return { addClient, listClients, addNote, draftNote, commitNote, updateNoteText, listNotes, currentNote, setCurrentNote, getTabs, openTab, closeTab, setActiveTab, exportData, importData, backend };
+  return {
+    addClient,
+    renameClient,
+    deleteClient,
+    deleteNote,
+    listClients,
+    addNote,
+    draftNote,
+    commitNote,
+    updateNoteText,
+    listNotes,
+    currentNote,
+    setCurrentNote,
+    getTabs,
+    openTab,
+    closeTab,
+    setActiveTab,
+    exportData,
+    importData,
+    backend,
+  };
 }

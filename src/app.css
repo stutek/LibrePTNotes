@@ -28,6 +28,8 @@
     --border-color: #3c3c3c;
     --text-main: #d4d4d4;
     --text-muted: #9d9d9d;
+    --primary: #007acc;
+    --on-primary: #ffffff;
     --danger: #f48771;
     --temporal-past: #dcdcaa;
     --temporal-future: #9cdcfe;
@@ -42,13 +44,21 @@
   }
 }
 
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-html, body { height: 100%; margin: 0; }
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
 body {
   background: var(--bg-color);
   color: var(--text-main);
-  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px / 1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overscroll-behavior: none;
 }
 #app {
@@ -57,7 +67,8 @@ body {
   height: 100%;
   padding-top: env(safe-area-inset-top, 0px);
 }
-button, input {
+button,
+input {
   font: inherit;
   color: inherit;
 }
@@ -139,7 +150,9 @@ input[type="text"] {
   gap: 8px;
   margin-bottom: 12px;
 }
-.add-client input { flex: 1 1 auto; }
+.add-client input {
+  flex: 1 1 auto;
+}
 .client-list {
   margin: 0 0 20px;
   padding: 0;
@@ -147,10 +160,9 @@ input[type="text"] {
 }
 .client-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border-color);
 }
 .client-name {
@@ -161,6 +173,45 @@ input[type="text"] {
   white-space: nowrap;
   font-weight: 600;
 }
+.client-actions {
+  display: flex;
+  gap: 8px;
+}
+.client-actions .open-notes {
+  flex: 1 1 auto;
+}
+.client-actions button {
+  min-width: 44px;
+}
+button.danger {
+  color: var(--danger);
+}
+.about {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.privacy-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--primary);
+}
+.update-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 2px solid var(--primary);
+  background: var(--card-bg);
+}
 .empty {
   color: var(--text-muted);
   padding: 12px 4px;
@@ -169,15 +220,23 @@ input[type="text"] {
   margin: 8px 0;
   font-size: 16px;
 }
-.backup .row, .dialog .row {
+.backup .row,
+.dialog .row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin: 8px 0;
 }
-.status { color: var(--text-muted); min-height: 1.4em; margin: 8px 0; }
-.status.is-error, .warning { color: var(--danger); }
+.status {
+  color: var(--text-muted);
+  min-height: 1.4em;
+  margin: 8px 0;
+}
+.status.is-error,
+.warning {
+  color: var(--danger);
+}
 
 /* Zapis: blanket kretnje je glava zapisa in urejevalnik skupaj. */
 .peek-host {
@@ -185,6 +244,19 @@ input[type="text"] {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+.note-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.note-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 .note-head {
   flex: 0 0 auto;
@@ -196,7 +268,10 @@ input[type="text"] {
   color: var(--text-muted);
   font-size: 14px;
 }
-.note-date { font-weight: 700; color: var(--text-main); }
+.note-date {
+  font-weight: 700;
+  color: var(--text-main);
+}
 .note-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -209,7 +284,9 @@ input[type="text"] {
   padding: 16px 12px;
   color: var(--text-muted);
 }
-.note-empty button { margin-top: 12px; }
+.note-empty button {
+  margin-top: 12px;
+}
 
 /* Barvanje: prosojen textarea nad barvanim pre; enaka pisava, odmik in prelom. Višino določa pre v
    toku, textarea ga prekrije (absolutno), zato višine ne nastavlja koda in drsi samo .note-body. */
@@ -217,13 +294,14 @@ input[type="text"] {
   position: relative;
   flex: 1 0 auto;
 }
-.md-highlight, .md-input {
+.md-highlight,
+.md-input {
   display: block;
   width: 100%;
   margin: 0;
   padding: 12px;
   border: 0;
-  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 16px / 1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -252,15 +330,34 @@ input[type="text"] {
   user-select: text;
   -webkit-user-select: text;
 }
-.md-input::selection { background: rgba(0, 122, 204, 0.35); color: transparent; }
-.md-heading { color: var(--md-heading); }
-.md-bold { color: var(--md-bold); }
-.md-italic { color: var(--md-italic); }
-.md-quote { color: var(--md-quote); }
-.md-code { color: var(--md-code); }
-.md-fence { color: var(--md-fence); }
-.md-marker { color: var(--md-marker); }
-.md-link { color: var(--md-link); }
+.md-input::selection {
+  background: rgba(0, 122, 204, 0.35);
+  color: transparent;
+}
+.md-heading {
+  color: var(--md-heading);
+}
+.md-bold {
+  color: var(--md-bold);
+}
+.md-italic {
+  color: var(--md-italic);
+}
+.md-quote {
+  color: var(--md-quote);
+}
+.md-code {
+  color: var(--md-code);
+}
+.md-fence {
+  color: var(--md-fence);
+}
+.md-marker {
+  color: var(--md-marker);
+}
+.md-link {
+  color: var(--md-link);
+}
 
 /* Dialog z geslom. */
 .dialog {
@@ -271,9 +368,16 @@ input[type="text"] {
   background: var(--bg-color);
   color: var(--text-main);
 }
-.dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-.dialog h2 { margin: 0 0 8px; font-size: 18px; }
-.dialog .row button { flex: 1 1 auto; }
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.dialog h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.dialog .row button {
+  flex: 1 1 auto;
+}
 
 /* Drsnik je zdaj .note-body: touch-action velja le do najbližjega drsnega vsebnika (planPeek.css). */
 .plan-peek-blanket .note-body {
@@ -292,6 +396,6 @@ input[type="text"] {
   border-radius: 6px;
   background: var(--bg-color);
   color: var(--text-main);
-  font: 16px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 16px / 1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   resize: none;
 }

@@ -1,6 +1,6 @@
 // Varnostna kopija: vsebina (stranke in zapisi) v šifrirani ovojnici LibrePT (backupEncryption.js).
 // Brez čistega JSON-a: kopija zapusti telefon, zato je vedno šifrirana. Google Drive ni vključen
-// (TODO.md §3). Vsebina nosi `app`, da obnovitev zavrne datoteko druge aplikacije.
+// (odprto: Google Drive). Vsebina nosi `app`, da obnovitev zavrne datoteko druge aplikacije.
 import { formatDateTime } from "../domain/dates.js";
 import { decryptBackup, encryptBackup, isEncryptedBackup } from "./backupEncryption.js";
 import { backupKeyForWriting } from "./backupKeyStore.js";
@@ -10,6 +10,7 @@ import { fromBase64 } from "./passphraseKey.js";
 export const ENCRYPTED_BACKUP_FORMAT = 6;
 export const APP_ID = "libreptnotes";
 export const PAYLOAD_VERSION = 1;
+export const MAX_KDF_ITERATIONS = 10_000_000; // LibrePT piše 600.000
 
 export class BackupError extends Error {
   constructor(code) {
@@ -19,16 +20,34 @@ export class BackupError extends Error {
 }
 
 export function buildBackupPayload({ clients, notes }, { now = new Date() } = {}) {
-  return { app: APP_ID, schemaVersion: PAYLOAD_VERSION, exportedAt: now.toISOString(), clients, notes };
+  return {
+    app: APP_ID,
+    schemaVersion: PAYLOAD_VERSION,
+    exportedAt: now.toISOString(),
+    clients,
+    notes,
+  };
 }
 
 /** Datoteka kopije za trenutno stanje; vrže BackupError("no-password"), če gesla ni. */
-export async function createBackup({ store, keyStore, now = new Date(), cryptoImpl = globalThis.crypto }) {
+export async function createBackup({
+  store,
+  keyStore,
+  now = new Date(),
+  cryptoImpl = globalThis.crypto,
+}) {
   const writing = await backupKeyForWriting(keyStore);
   if (!writing) throw new BackupError("no-password");
   const payload = buildBackupPayload(await store.exportData(), { now });
-  const envelope = await encryptBackup(payload, { ...writing, formatVersion: ENCRYPTED_BACKUP_FORMAT, cryptoImpl });
-  return { filename: `libreptnotes-${formatDateTime(now).slice(0, 10)}.json`, text: JSON.stringify(envelope) };
+  const envelope = await encryptBackup(payload, {
+    ...writing,
+    formatVersion: ENCRYPTED_BACKUP_FORMAT,
+    cryptoImpl,
+  });
+  return {
+    filename: `libreptnotes-${formatDateTime(now).slice(0, 10)}.json`,
+    text: JSON.stringify(envelope),
+  };
 }
 
 function parseEnvelope(text) {
@@ -39,7 +58,13 @@ function parseEnvelope(text) {
     throw new BackupError("bad-file");
   }
   // Neznana različica je zavrnitev, ne ugibanje: ovojnica novejše različice se ne sme brati kot prazna baza.
-  if (!isEncryptedBackup(parsed) || parsed.formatVersion !== ENCRYPTED_BACKUP_FORMAT) throw new BackupError("bad-file");
+  if (!isEncryptedBackup(parsed) || parsed.formatVersion !== ENCRYPTED_BACKUP_FORMAT)
+    throw new BackupError("bad-file");
+  // Število ponovitev bere iz datoteke (starejše datoteke imajo manj); previsoko število bi telefon
+  // zamrznilo, zato ga zavrne.
+  const iterations = parsed.kdf?.iterations;
+  if (!Number.isInteger(iterations) || iterations < 1 || iterations > MAX_KDF_ITERATIONS)
+    throw new BackupError("bad-file");
   return parsed;
 }
 
@@ -49,7 +74,9 @@ function bytesEqual(a, b) {
 
 function sameSalt(record, envelope) {
   try {
-    return Boolean(record?.salt) && bytesEqual(new Uint8Array(record.salt), fromBase64(envelope.salt));
+    return (
+      Boolean(record?.salt) && bytesEqual(new Uint8Array(record.salt), fromBase64(envelope.salt))
+    );
   } catch {
     return false;
   }
@@ -80,12 +107,16 @@ export async function readBackup(text, { keyStore, askPassword, cryptoImpl = glo
       throw new BackupError("wrong-password");
     }
   }
-  if (payload?.app !== APP_ID || !Array.isArray(payload.clients) || !Array.isArray(payload.notes)) throw new BackupError("foreign");
+  if (payload?.app !== APP_ID || !Array.isArray(payload.clients) || !Array.isArray(payload.notes))
+    throw new BackupError("foreign");
   return { clients: payload.clients, notes: payload.notes };
 }
 
 /** Obnovitev zamenja vse: najprej odpre in preveri datoteko, šele nato vpraša in zamenja. */
-export async function restoreBackup(text, { store, keyStore, askPassword, confirmReplace, cryptoImpl }) {
+export async function restoreBackup(
+  text,
+  { store, keyStore, askPassword, confirmReplace, cryptoImpl },
+) {
   const data = await readBackup(text, { keyStore, askPassword, cryptoImpl });
   if (!(await confirmReplace(data))) throw new BackupError("cancelled");
   await store.importData(data);

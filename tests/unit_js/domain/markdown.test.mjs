@@ -1,8 +1,11 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { tokenize } from "../src/domain/markdown.js";
+import { test } from "node:test";
+import { tokenize } from "../../../src/domain/markdown.js";
 
-const classes = (text) => tokenize(text).filter((s) => s.cls).map((s) => [s.cls, s.text]);
+const classes = (text) =>
+  tokenize(text)
+    .filter((s) => s.cls)
+    .map((s) => [s.cls, s.text]);
 
 test("besedilo se nikoli ne spremeni: združeni odseki so enaki vhodu", () => {
   const samples = [
@@ -12,11 +15,20 @@ test("besedilo se nikoli ne spremeni: združeni odseki so enaki vhodu", () => {
     "  - zamaknjeno **ni zaprto\n_a_b_ ** ` \n```\nneskončen blok",
     "čšž 😀 **ž**",
   ];
-  for (const s of samples) assert.equal(tokenize(s).map((x) => x.text).join(""), s);
+  for (const s of samples)
+    assert.equal(
+      tokenize(s)
+        .map((x) => x.text)
+        .join(""),
+      s,
+    );
 });
 
 test("naslovi", () => {
-  assert.deepEqual(classes("# Dan 1\ntekst\n### Tri"), [["md-heading", "# Dan 1"], ["md-heading", "### Tri"]]);
+  assert.deepEqual(classes("# Dan 1\ntekst\n### Tri"), [
+    ["md-heading", "# Dan 1"],
+    ["md-heading", "### Tri"],
+  ]);
   assert.deepEqual(classes("#brez presledka"), []);
   assert.deepEqual(classes("####### sedem"), []);
 });
@@ -32,7 +44,10 @@ test("krepko in ležeče", () => {
 
 test("seznami: obarva se samo oznaka, vsebina je lahko oblikovana", () => {
   assert.deepEqual(classes("- stvar"), [["md-marker", "-"]]);
-  assert.deepEqual(classes("  * stvar **x**"), [["md-marker", "*"], ["md-bold", "**x**"]]);
+  assert.deepEqual(classes("  * stvar **x**"), [
+    ["md-marker", "*"],
+    ["md-bold", "**x**"],
+  ]);
   assert.deepEqual(classes("12. stvar"), [["md-marker", "12."]]);
   assert.deepEqual(classes("-brez presledka"), []);
 });
@@ -43,7 +58,9 @@ test("citati", () => {
 
 test("vrstična koda in povezave", () => {
   assert.deepEqual(classes("a `x *y*` b"), [["md-code", "`x *y*`"]]);
-  assert.deepEqual(classes("glej [stran](https://a.si/b) tu"), [["md-link", "[stran](https://a.si/b)"]]);
+  assert.deepEqual(classes("glej [stran](https://a.si/b) tu"), [
+    ["md-link", "[stran](https://a.si/b)"],
+  ]);
 });
 
 test("bloki kode: ograja in vsebina, tudi neprekinjen blok do konca", () => {
@@ -54,5 +71,8 @@ test("bloki kode: ograja in vsebina, tudi neprekinjen blok do konca", () => {
     ["md-fence", "```"],
     ["md-heading", "# naslov"],
   ]);
-  assert.deepEqual(classes("```\nnezaprt"), [["md-fence", "```"], ["md-code", "nezaprt"]]);
+  assert.deepEqual(classes("```\nnezaprt"), [
+    ["md-fence", "```"],
+    ["md-code", "nezaprt"],
+  ]);
 });

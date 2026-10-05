@@ -1,16 +1,27 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sortNotes, neighbours } from "../src/domain/notes.js";
+import { test } from "node:test";
+import { neighbours, sortNotes } from "../../../src/domain/notes.js";
 
 const n = (id, date, created = 0) => ({ id, date, created, text: id });
 
 test("zapisi so urejeni po datumu, pri istem datumu po času nastanka", () => {
-  const sorted = sortNotes([n("c", "2026-10-02 10:00"), n("b", "2026-10-01 10:00", 2), n("a", "2026-10-01 10:00", 1)]);
-  assert.deepEqual(sorted.map((x) => x.id), ["a", "b", "c"]);
+  const sorted = sortNotes([
+    n("c", "2026-10-02 10:00"),
+    n("b", "2026-10-01 10:00", 2),
+    n("a", "2026-10-01 10:00", 1),
+  ]);
+  assert.deepEqual(
+    sorted.map((x) => x.id),
+    ["a", "b", "c"],
+  );
 });
 
 test("sosedi: prejšnji in naslednji iste stranke", () => {
-  const notes = [n("a", "2026-10-01 10:00"), n("b", "2026-10-02 10:00"), n("c", "2026-10-03 10:00")];
+  const notes = [
+    n("a", "2026-10-01 10:00"),
+    n("b", "2026-10-02 10:00"),
+    n("c", "2026-10-03 10:00"),
+  ];
   const mid = neighbours(notes, "b");
   assert.equal(mid.previous.id, "a");
   assert.equal(mid.next.id, "c");

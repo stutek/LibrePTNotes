@@ -19,7 +19,11 @@ export function memoryBackend() {
       stores[name].delete(key);
     },
     async replaceAll({ clients, notes, meta }) {
-      for (const [name, rows] of [["clients", clients], ["notes", notes], ["meta", meta]]) {
+      for (const [name, rows] of [
+        ["clients", clients],
+        ["notes", notes],
+        ["meta", meta],
+      ]) {
         stores[name].clear();
         for (const row of rows) stores[name].set(keyOf(name, row), clone(row));
       }

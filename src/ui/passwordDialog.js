@@ -1,7 +1,11 @@
 // Dialog z geslom kopije (markup je v index.html): nastavi geslo ali vpiši tisto, s katerim je bila
 // datoteka shranjena. Geslo je prikazano v celoti, ne s pikami: pika-geslo nihče ne prepiše na papir,
 // papir pa je edina pot, ko telefona ni več. Shrani se samo ključ (data/backupKeyStore.js).
-import { forgetBackupPassword, setBackupPassword, unlockWithPassword } from "../data/backupKeyStore.js";
+import {
+  forgetBackupPassword,
+  setBackupPassword,
+  unlockWithPassword,
+} from "../data/backupKeyStore.js";
 import { generatePassphrase } from "../data/passphraseKey.js";
 
 const $ = (id) => document.getElementById(id);
@@ -63,7 +67,9 @@ export function setupPasswordDialog({ t, keyStore }) {
     if (!typed) return status("pwEmpty", true);
     try {
       if (envelope) {
-        const { key } = await unlockWithPassword(envelope, typed, keyStore, { remember: $("pw-remember").checked });
+        const { key } = await unlockWithPassword(envelope, typed, keyStore, {
+          remember: $("pw-remember").checked,
+        });
         settle(key);
       } else {
         await setBackupPassword(typed, keyStore);

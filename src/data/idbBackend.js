@@ -40,7 +40,11 @@ export function idbBackend(db) {
     // Ena transakcija: obnovitev je ali cela ali nič.
     async replaceAll({ clients, notes, meta }) {
       const tx = db.transaction(["clients", "notes", "meta"], "readwrite");
-      for (const [name, rows] of [["clients", clients], ["notes", notes], ["meta", meta]]) {
+      for (const [name, rows] of [
+        ["clients", clients],
+        ["notes", notes],
+        ["meta", meta],
+      ]) {
         const s = tx.objectStore(name);
         s.clear();
         for (const row of rows) s.put(row);

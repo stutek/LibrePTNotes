@@ -22,7 +22,11 @@ export async function hasBackupPassword(store) {
 }
 
 // Nova sol pri vsaki nastavitvi: že shranjene datoteke ostanejo zaklenjene s starim geslom.
-export async function setBackupPassword(passphrase, store, { cryptoImpl = globalThis.crypto, now = Date.now() } = {}) {
+export async function setBackupPassword(
+  passphrase,
+  store,
+  { cryptoImpl = globalThis.crypto, now = Date.now() } = {},
+) {
   if (!passphrase) throw new Error("a backup password is required");
   const salt = randomSalt(cryptoImpl);
   const key = await deriveAesKey(passphrase, salt, { cryptoImpl });
@@ -39,9 +43,16 @@ export async function backupKeyForWriting(store) {
 
 // Pot nove naprave: geslo, vpisano zdaj. Ključ se izpelje iz soli DATOTEKE, zato je enak tistemu, ki
 // jo je zapisal; `remember` ga obdrži na tej napravi.
-export async function unlockWithPassword(envelope, passphrase, store, { cryptoImpl = globalThis.crypto, remember = false, now = Date.now() } = {}) {
+export async function unlockWithPassword(
+  envelope,
+  passphrase,
+  store,
+  { cryptoImpl = globalThis.crypto, remember = false, now = Date.now() } = {},
+) {
   if (!passphrase) throw new Error("a backup password is required");
-  const { key, salt, iterations } = await deriveKeyForEnvelope(envelope, passphrase, { cryptoImpl });
+  const { key, salt, iterations } = await deriveKeyForEnvelope(envelope, passphrase, {
+    cryptoImpl,
+  });
   if (remember) await store.write({ key, salt, iterations, setAt: now });
   return { key, salt, iterations };
 }

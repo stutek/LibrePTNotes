@@ -27,7 +27,8 @@ const STRINGS = {
   backupPasswordForget: "Pozabi geslo na tej napravi",
   backupSaved: "Kopija shranjena.",
   backupNeedsPassword: "Brez gesla kopije ni mogoče shraniti.",
-  backupRestoreConfirm: "Obnovitev zamenja vse na tej napravi. V datoteki: stranke {clients}, zapisi {notes}. Nadaljujem?",
+  backupRestoreConfirm:
+    "Obnovitev zamenja vse na tej napravi. V datoteki: stranke {clients}, zapisi {notes}. Nadaljujem?",
   backupRestored: "Obnovljeno. Stranke: {clients}, zapisi: {notes}.",
   backupBadFile: "Datoteka ni kopija LibrePTNotes.",
   backupWrongPassword: "Napačno geslo ali spremenjena datoteka.",
@@ -40,7 +41,8 @@ const STRINGS = {
   pwCopy: "Kopiraj",
   pwCopied: "Kopirano.",
   pwCopyFailed: "Kopiranje ni uspelo; geslo je na zaslonu.",
-  pwWriteDown: "Zapiši geslo drugam kot na ta telefon. Kopija je za dan, ko telefona ni več, geslo pa je edini način, da jo odpreš. Ni ga mogoče obnoviti.",
+  pwWriteDown:
+    "Zapiši geslo drugam kot na ta telefon. Kopija je za dan, ko telefona ni več, geslo pa je edini način, da jo odpreš. Ni ga mogoče obnoviti.",
   pwSave: "Zapisal sem si geslo, shrani",
   pwOpen: "Odpri",
   pwCancel: "Zapri",
@@ -48,6 +50,17 @@ const STRINGS = {
   pwFailed: "Gesla ni bilo mogoče shraniti.",
   pwChangeWarning: "Že shranjene datoteke ostanejo zaklenjene s starim geslom.",
   pwRemember: "Zapomni si na tej napravi",
+  renameClient: "Preimenuj",
+  renameClientPrompt: "Novo ime stranke",
+  deleteClient: "Izbriši",
+  deleteClientConfirm:
+    "Izbrišem stranko {name} in vse njene zapise ({notes})? Tega ni mogoče razveljaviti.",
+  deleteNote: "Izbriši zapis",
+  deleteNoteConfirm: "Izbrišem zapis {date}? Tega ni mogoče razveljaviti.",
+  updateAvailable: "Na voljo je nova različica",
+  updateRefresh: "Osveži",
+  versionLabel: "Različica",
+  privacyLink: "Zasebnost",
 };
 
 export function t(key) {

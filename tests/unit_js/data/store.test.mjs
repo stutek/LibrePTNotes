@@ -1,7 +1,7 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createStore } from "../src/data/store.js";
-import { memoryBackend } from "./memoryBackend.js";
+import { test } from "node:test";
+import { createStore } from "../../../src/data/store.js";
+import { memoryBackend } from "../helpers/memoryBackend.mjs";
 
 function make(start = new Date(2026, 9, 5, 9, 0)) {
   let clock = start.getTime();
@@ -10,7 +10,12 @@ function make(start = new Date(2026, 9, 5, 9, 0)) {
     now: () => new Date(clock),
     newId: () => `id${++seq}`,
   });
-  return { store, tick: (min = 1) => (clock += min * 60000) };
+  return {
+    store,
+    tick: (min = 1) => {
+      clock += min * 60000;
+    },
+  };
 }
 
 test("stranka: ime se obreže, prazno ime se zavrne", async () => {
@@ -25,7 +30,10 @@ test("seznam strank je po imenu (slovenska abeceda)", async () => {
   await store.addClient("Žan");
   await store.addClient("Ana");
   await store.addClient("Čoh");
-  assert.deepEqual((await store.listClients()).map((c) => c.name), ["Ana", "Čoh", "Žan"]);
+  assert.deepEqual(
+    (await store.listClients()).map((c) => c.name),
+    ["Ana", "Čoh", "Žan"],
+  );
 });
 
 test("zapis dobi datum ob ustvarjanju v obliki YYYY-MM-DD HH:MM", async () => {
@@ -56,7 +64,10 @@ test("zapisi so ločeni po strankah in urejeni po datumu", async () => {
   await store.addNote(b.id, "tuj");
   tick(10);
   const second = await store.addNote(a.id, "drugi");
-  assert.deepEqual((await store.listNotes(a.id)).map((x) => x.id), [first.id, second.id]);
+  assert.deepEqual(
+    (await store.listNotes(a.id)).map((x) => x.id),
+    [first.id, second.id],
+  );
   assert.equal((await store.listNotes(b.id)).length, 1);
 });
 
@@ -119,7 +130,12 @@ test("uvoz zavrne napačno obliko in ne spremeni baze", async () => {
   const { store } = make();
   await store.addClient("Ana");
   await assert.rejects(() => store.importData({ clients: "ne", notes: [] }));
-  await assert.rejects(() => store.importData({ clients: [{ id: "x", name: "X" }], notes: [{ id: "n", clientId: "zlo", date: "d", text: "" }] }));
+  await assert.rejects(() =>
+    store.importData({
+      clients: [{ id: "x", name: "X" }],
+      notes: [{ id: "n", clientId: "zlo", date: "d", text: "" }],
+    }),
+  );
   assert.equal((await store.listClients()).length, 1);
 });
 
@@ -131,4 +147,62 @@ test("draftNote ne shrani, commitNote shrani in nastavi trenutni zapis", async (
   assert.equal(draft.date, "2026-10-05 09:00");
   await store.commitNote(draft);
   assert.equal((await store.currentNote(c.id)).id, draft.id);
+});
+
+test("preimenovanje stranke: ime se obreže, prazno in neznana stranka se zavrneta", async () => {
+  const { store } = make();
+  const c = await store.addClient("Ana");
+  await store.renameClient(c.id, "  Anja ");
+  assert.deepEqual(
+    (await store.listClients()).map((x) => x.name),
+    ["Anja"],
+  );
+  await assert.rejects(() => store.renameClient(c.id, "  "));
+  await assert.rejects(() => store.renameClient("ni", "X"));
+});
+
+test("brisanje stranke zbriše njene zapise, zavihek in trenutni zapis, drugih ne", async () => {
+  const { store } = make();
+  const ana = await store.addClient("Ana");
+  const bor = await store.addClient("Bor");
+  await store.addNote(ana.id, "a");
+  await store.addNote(bor.id, "b");
+  await store.openTab(ana.id);
+  await store.openTab(bor.id);
+  await store.deleteClient(ana.id);
+  assert.deepEqual(
+    (await store.listClients()).map((c) => c.id),
+    [bor.id],
+  );
+  assert.equal((await store.backend.getAll("notes")).length, 1);
+  assert.equal(await store.backend.get("meta", `current:${ana.id}`), undefined);
+  assert.deepEqual(await store.getTabs(), { open: [bor.id], active: bor.id });
+});
+
+test("brisanje zapisa: trenutni preide na prejšnjega, najstarejši na naslednjega, zadnji v prazno", async () => {
+  const { store, tick } = make();
+  const c = await store.addClient("Ana");
+  const ids = [];
+  for (const text of ["1", "2", "3"]) {
+    ids.push((await store.addNote(c.id, text)).id);
+    tick();
+  }
+  await store.setCurrentNote(c.id, ids[1]);
+  assert.equal(await store.deleteNote(ids[1]), ids[0]);
+  assert.equal((await store.currentNote(c.id)).id, ids[0]);
+  assert.equal(await store.deleteNote(ids[0]), ids[2]);
+  assert.equal(await store.deleteNote(ids[2]), null);
+  assert.equal(await store.currentNote(c.id), null);
+  assert.equal(await store.backend.get("meta", `current:${c.id}`), undefined);
+});
+
+test("brisanje zapisa, ki ni trenutni, trenutnega ne premakne", async () => {
+  const { store, tick } = make();
+  const c = await store.addClient("Ana");
+  const a = await store.addNote(c.id, "1");
+  tick();
+  const b = await store.addNote(c.id, "2");
+  assert.equal(await store.deleteNote(a.id), b.id);
+  assert.equal((await store.currentNote(c.id)).id, b.id);
+  await assert.rejects(() => store.deleteNote("ni"));
 });
