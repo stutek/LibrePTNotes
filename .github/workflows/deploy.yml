@@ -1,8 +1,17 @@
-name: Test and deploy to GitHub Pages
+name: Build, Verify and Deploy to GitHub Pages
 
-# Objavi se samo src/, in samo če `node --test` uspe: delo teče neposredno na main (TODO.md §2),
-# zato bi vsak pokvarjen potisk sicer takoj prišel na spletno stran. Vzorec objave je iz LibrePT.
-# Enkratna nastavitev: Settings -> Pages -> Source: "GitHub Actions".
+# Publishes ONLY the assembled app (dist/, a copy of src/ plus version.js, .nojekyll and
+# integrity.json) to GitHub Pages on every push to main. Work is trunk-based on main (AGENT_RULES),
+# so this gate is what stops a broken push from reaching the public page.
+#
+# One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+#
+# The stages are the same five `python -m build check` runs locally, in the same order:
+# Stage 1 fast checks (concurrent) -> Stage 2 medium -> Stage 3 e2e -> Stage 4 regression -> Stage 5
+# ZAP, then the post-gate assemble and deploy. The order is declared ONCE, in build/__init__.py's
+# PIPELINE_STAGES; agent_tools/pipeline_gates.py reads that table and fails Stage 1 if this file
+# drifts from it. EVERY job that runs a stage's checks says `Stage N` in its `name:`, and a job that
+# runs none must not claim one; that label is checked, not decorative.
 
 on:
   push:
@@ -14,28 +23,222 @@ permissions:
   pages: write
   id-token: write
 
+# Never run two Pages deploys at once; a newer push supersedes an in-flight one.
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  test:
+  # === STAGE 1 === fast checks, no browser. No `needs`, so they all start at once, as the local
+  # Stage 1 runs its table in one parallel batch.
+  python-lint:
+    name: Stage 1 · Python Lint & Format (Ruff)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: ./.github/actions/python-env
+      - name: Run Python Lint
+        run: .venv/bin/python -c "from build import run_python_lint; run_python_lint()"
+
+  doc-graph:
+    name: Stage 1 · Documentation Graph (doclinks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Check documentation cross-references
+        run: .venv/bin/python -c "from build import run_doc_graph_check; run_doc_graph_check()"
+
+  frontend-lint:
+    name: Stage 1 · Frontend Lint & Format (Biome)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Run Frontend Lint
+        run: .venv/bin/python -c "from build import run_frontend_lint; run_frontend_lint()"
+
+  dependency-scan:
+    name: Stage 1 · Dependency Security Scan (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Run pip-audit
+        run: .venv/bin/python -c "from build import run_security_audit; run_security_audit()"
+
+  unit-tests:
+    name: Stage 1 · Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Run Unit Tests
+        run: .venv/bin/python -c "from build import run_unit_tests; run_unit_tests()"
+
+  javascript-unit-tests:
+    name: Stage 1 · JavaScript Unit Tests (node:test) and their coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      # No actions/setup-node: build.ensure_node_binary() vendors Node the same way
+      # ensure_biome_binary() vendors Biome, so every job stays on the one Python-only toolchain.
+      - name: Run JavaScript Unit Tests
+        run: .venv/bin/python -c "from build import run_javascript_unit_tests; run_javascript_unit_tests()"
+      - name: Unit coverage of pure logic
+        run: .venv/bin/python -c "from build import run_unit_coverage_check; run_unit_coverage_check()"
+
+  # Its own job so a security regression is named as one on the run page, not reported as a generic
+  # unit-test failure.
+  security-tests:
+    name: Stage 1 · Security Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Run Security Tests
+        run: .venv/bin/python -c "from build import run_security_tests; run_security_tests()"
+
+  # One job, many named checks: each Actions job costs a fresh runner, checkout and Python setup
+  # (~30s) for checks that take milliseconds.
+  structure-checks:
+    name: Stage 1 · Structural Invariants (catalog, TODO, headers, tokens, strings, styles, layering, gating, complexity, assertions, use cases, docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+      - name: Module catalog coverage
+        run: .venv/bin/python -c "from build import run_catalog_coverage_check; run_catalog_coverage_check()"
+      - name: TODO hygiene
+        run: .venv/bin/python -c "from build import run_todo_hygiene_check; run_todo_hygiene_check()"
+      - name: TODO pointers
+        run: .venv/bin/python -c "from build import run_todo_refs_check; run_todo_refs_check()"
+      - name: Module self-path headers
+        run: .venv/bin/python -c "from build import run_module_header_check; run_module_header_check()"
+      - name: CSS custom properties
+        run: .venv/bin/python -c "from build import run_css_token_check; run_css_token_check()"
+      - name: Interface strings
+        run: .venv/bin/python -c "from build import run_ui_string_check; run_ui_string_check()"
+      - name: Styles written in code
+        run: .venv/bin/python -c "from build import run_inline_style_check; run_inline_style_check()"
+      - name: Import layering
+        run: .venv/bin/python -c "from build import run_import_layer_check; run_import_layer_check()"
+      - name: Python version
+        run: .venv/bin/python -c "from build import run_python_version_check; run_python_version_check()"
+      - name: Pipeline gating
+        run: .venv/bin/python -c "from build import run_pipeline_gate_check; run_pipeline_gate_check()"
+      - name: Cyclomatic complexity
+        run: .venv/bin/python -c "from build import run_complexity_check; run_complexity_check()"
+      - name: Test assertions
+        run: .venv/bin/python -c "from build import run_test_assertion_check; run_test_assertion_check()"
+      - name: Use-case traceability
+        run: .venv/bin/python -c "from build import run_use_case_test_check; run_use_case_test_check()"
+      - name: Rendered docs
+        run: .venv/bin/python -c "from build import run_docs_render_check; run_docs_render_check()"
+
+  # Stage 1 here as it is locally: no `needs`. Bare system Python, no install: this check must work
+  # on the stdlib alone.
+  static-security-audits:
+    name: Stage 1 · Static Security Audits (CSP parity & HTML sinks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
         with:
-          node-version: 22
-      - run: node --test
+          install: 'false'
+      - name: Run Static Security Audits
+        run: python -c "from build import run_static_security_checks; run_static_security_checks()"
+
+  # === STAGE 2 === needs ALL of Stage 1, so a broken component fails fast. Chained rather than
+  # concurrent even though CI has no resource contention: "the pipeline" then means one ordering in
+  # both places.
+  medium-tests:
+    name: Stage 2 · Medium Component Tests
+    needs:
+      [
+        python-lint,
+        doc-graph,
+        frontend-lint,
+        dependency-scan,
+        unit-tests,
+        javascript-unit-tests,
+        security-tests,
+        structure-checks,
+        static-security-audits,
+      ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+        with:
+          browsers: 'true'
+      - name: Run Medium Component Tests
+        run: .venv/bin/python -c "from build import run_medium_tests; run_medium_tests()"
+
+  # === STAGE 3 === only if Stage 2 is clean.
+  e2e-tests:
+    name: Stage 3 · E2E Browser Tests
+    needs: [medium-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+        with:
+          browsers: 'true'
+      - name: Run E2E Browser Tests
+        run: .venv/bin/python -c "from build import run_e2e_tests; run_e2e_tests()"
+
+  # === STAGE 4 === the frozen backup files (tests/regression/): what the released version promises
+  # to restore. Its own stage so a failure reads as "a promise to existing users broke", not "the
+  # work in hand does not hold yet".
+  regression-tests:
+    name: Stage 4 · Regression Suite (frozen backups)
+    needs: [e2e-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+        with:
+          browsers: 'true'
+      - name: Run Regression Suite
+        run: .venv/bin/python -c "from build import run_regression_tests; run_regression_tests()"
+
+  # === STAGE 5 === only if the suites are clean. Locally that order is mandatory (ZAP's request
+  # flood against the dev server a pytest run is using causes spurious timeouts); here it is kept so
+  # the stage numbers mean one thing in both places. System Python: the scan itself runs in Docker.
+  owasp-zap-scan:
+    name: Stage 5 · OWASP ZAP Security Scan
+    needs: [regression-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/python-env
+        with:
+          install: 'false'
+      - name: Run OWASP ZAP Scan
+        run: python -c "from build import run_owasp_zap_scan; run_owasp_zap_scan()"
 
   build:
-    needs: test
+    name: Post-gate · Assemble & Bundle App
+    # The chain carries the rest transitively: zap -> regression -> e2e -> medium -> every Stage 1 job.
+    needs: [owasp-zap-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/upload-pages-artifact@v3
         with:
-          path: src
+          fetch-depth: 0 # CACHE_VERSION = število commitov (build.stamp_cache_version)
+      - uses: ./.github/actions/python-env
+        with:
+          install: 'false'
+      # build.run_build() is the one entry point local builds use too: it copies src/ to dist/,
+      # stamps dist/version.js, adds .nojekyll and, last, integrity.json over the exact bytes served.
+      - name: Assemble dist
+        run: python -c "from build import run_build; run_build()"
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
     needs: build

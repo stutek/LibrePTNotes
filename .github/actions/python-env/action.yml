@@ -1,0 +1,44 @@
+name: LibrePTNotes Python environment
+description: >
+  The ONE declared Python, and optionally the project venv and browsers. Every job in the workflow
+  enters through here so the setup exists in one place rather than in a dozen copies.
+
+# The version is not an input: it lives in `.python-version`, which `actions/setup-python` reads
+# directly and `agent_tools/python_version.py` gates against a literal creeping back into a workflow.
+#
+# `actions/checkout` cannot move in here: a local action is read from the workspace, so GitHub needs
+# the repository on disk before it can find this file. Each job checks out first, enters here second.
+
+inputs:
+  install:
+    description: >
+      Create `.venv` and install requirements.txt. The static-audit and build jobs deliberately run
+      bare system Python with no install: anything they reach must import with the stdlib alone, and
+      that only stays true if those jobs really run without the venv.
+    required: false
+    default: "true"
+  browsers:
+    description: Also install the Chromium Playwright uses. Only the browser stages need it.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version-file: .python-version
+        cache: ${{ inputs.install == 'true' && 'pip' || '' }}
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        python -m venv .venv
+        .venv/bin/pip install --upgrade pip
+        .venv/bin/pip install -r requirements.txt
+
+    - name: Install browsers
+      if: inputs.browsers == 'true'
+      shell: bash
+      run: .venv/bin/playwright install chromium --with-deps
