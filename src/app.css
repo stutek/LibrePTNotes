@@ -1,0 +1,273 @@
+/* Videz samo tukaj; koda nastavlja razrede (AGENT_RULES). Barve urejevalnika: VS Code Dark+ / Light+ po nastavitvi telefona. */
+:root {
+  color-scheme: light dark;
+  --bg-color: #ffffff;
+  --card-bg: #f3f3f3;
+  --border-color: #d0d0d0;
+  --text-main: #000000;
+  --text-muted: #616161;
+  --primary: #007acc;
+  --on-primary: #ffffff;
+  --danger: #a31515;
+  --temporal-past: #795e26;
+  --temporal-future: #0451a5;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --md-heading: #800000;
+  --md-bold: #000080;
+  --md-italic: #800000;
+  --md-quote: #008000;
+  --md-code: #a31515;
+  --md-marker: #0451a5;
+  --md-link: #0000ff;
+  --md-fence: #a31515;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1e1e1e;
+    --card-bg: #252526;
+    --border-color: #3c3c3c;
+    --text-main: #d4d4d4;
+    --text-muted: #9d9d9d;
+    --danger: #f48771;
+    --temporal-past: #dcdcaa;
+    --temporal-future: #9cdcfe;
+    --md-heading: #569cd6;
+    --md-bold: #569cd6;
+    --md-italic: #569cd6;
+    --md-quote: #6a9955;
+    --md-code: #ce9178;
+    --md-marker: #6796e6;
+    --md-link: #3794ff;
+    --md-fence: #ce9178;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg-color);
+  color: var(--text-main);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior: none;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+button, input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--card-bg);
+  cursor: pointer;
+}
+button.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+input[type="text"] {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-color);
+}
+
+/* Zavihki: izbira samo s klikom, brez vleka. */
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 6px 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+.tab {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-color);
+  overflow: hidden;
+}
+.tab button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.tab.is-active {
+  border-color: var(--primary);
+}
+.tab.is-active .tab-name {
+  color: var(--primary);
+  font-weight: 700;
+}
+.tab-close {
+  min-width: 44px;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.view {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Seznam strank in varnostna kopija. */
+.page {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 12px calc(24px + var(--safe-bottom));
+}
+.add-client {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.add-client input { flex: 1 1 auto; }
+.client-list {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.client-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.client-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.empty {
+  color: var(--text-muted);
+  padding: 12px 4px;
+}
+.backup h2 {
+  margin: 8px 0;
+  font-size: 16px;
+}
+.backup .row, .dialog .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.status { color: var(--text-muted); min-height: 1.4em; margin: 8px 0; }
+.status.is-error, .warning { color: var(--danger); }
+
+/* Zapis: blanket kretnje je glava zapisa in urejevalnik skupaj. */
+.peek-host {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.note-head {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.note-date { font-weight: 700; color: var(--text-main); }
+.note-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--safe-bottom);
+}
+.note-empty {
+  padding: 16px 12px;
+  color: var(--text-muted);
+}
+.note-empty button { margin-top: 12px; }
+
+/* Barvanje: prosojen textarea nad barvanim pre; enaka pisava, odmik in prelom. Višino textarea
+   določi koda iz vsebine, zato se drsi samo .note-body in poravnava ostane sama od sebe. */
+.md-wrap {
+  position: relative;
+  min-height: 100%;
+}
+.md-highlight, .md-input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  tab-size: 4;
+  text-align: left;
+}
+.md-highlight {
+  color: var(--text-main);
+  pointer-events: none;
+}
+.md-wrap .md-highlight {
+  position: absolute;
+  inset: 0;
+}
+.md-input {
+  position: relative;
+  min-height: 60vh;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-main);
+  outline: none;
+  /* blanket ima user-select: none zaradi vleka; urejevalnik mora ostati izbirljiv (iOS drugače ne piše). */
+  user-select: text;
+  -webkit-user-select: text;
+}
+.md-input::selection { background: rgba(0, 122, 204, 0.35); color: transparent; }
+.md-heading { color: var(--md-heading); }
+.md-bold { color: var(--md-bold); }
+.md-italic { color: var(--md-italic); }
+.md-quote { color: var(--md-quote); }
+.md-code { color: var(--md-code); }
+.md-fence { color: var(--md-fence); }
+.md-marker { color: var(--md-marker); }
+.md-link { color: var(--md-link); }
+
+/* Dialog z geslom. */
+.dialog {
+  width: min(92vw, 420px);
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+.dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+.dialog h2 { margin: 0 0 8px; font-size: 18px; }
+.dialog .row button { flex: 1 1 auto; }

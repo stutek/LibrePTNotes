@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LibrePTNotes</title>
+  <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./gesture/planPeek.css">
+</head>
+<body>
+  <div id="app">
+    <nav id="tabs" class="tabs"></nav>
+    <main id="view" class="view"></main>
+  </div>
+  <dialog id="dialog-password" class="dialog">
+    <h2 id="pw-title"></h2>
+    <p id="pw-lead"></p>
+    <label for="pw-value" id="pw-label"></label>
+    <input id="pw-value" type="text" autocomplete="off" spellcheck="false" autocapitalize="off">
+    <div class="row">
+      <button type="button" id="pw-generate"></button>
+      <button type="button" id="pw-copy"></button>
+    </div>
+    <p id="pw-warning" class="warning"></p>
+    <label id="pw-remember-row" class="row" hidden><input type="checkbox" id="pw-remember" checked> <span id="pw-remember-text"></span></label>
+    <p id="pw-status" class="status" role="status"></p>
+    <div class="row">
+      <button type="button" id="pw-cancel"></button>
+      <button type="button" id="pw-confirm" class="primary"></button>
+    </div>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
