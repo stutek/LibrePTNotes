@@ -24,6 +24,7 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 - **Barvanje brez knjižnice** (2026-10-05 10:53:59.617): prosojen `textarea` nad barvanim `pre`. CodeMirror bi dodal nekaj sto KB kode in odvisnost, ki ju je treba vzdrževati in predpomniti za delo brez povezave.
 - **Besedila v slovenščini** (2026-10-05 10:53:59.617).
 - **Kretnja kot kopija** (2026-10-05 10:53:59.617): `src/gesture/planPeek.js` in `.css` sta kopiji iz LibrePT (`src/modules/clipboard/planPeek.*`, commit 403715f9, MIT). Repo je ločen, zato se kopija lahko oddalji od LibrePT.
+- **Objava samo po uspešnih testih** (2026-10-05 11:03:59.521): delo teče trunk-based neposredno na `main`, zato potek GitHub Actions pred objavo na Pages požene `node --test` in ob napaki ne objavi. Brez tega bi vsak pokvarjen potisk takoj prišel na spletno stran.
 
 ## 3. Odprto
 
@@ -37,4 +38,4 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 3. Stranke in zavihki.
 4. Zapisi z datumom in barvanje markdowna.
 5. Kretnja L: priklop `src/gesture/planPeek.js` na zapis.
-6. Preizkus v brskalniku pri 390 px in PR z opisom, kaj je bilo preverjeno.
+6. Preizkus v brskalniku pri 390 px; v telesu commita opis, kaj je bilo preverjeno.
