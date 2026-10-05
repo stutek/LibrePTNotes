@@ -11,3 +11,5 @@ tags: [index]
 * **[AGENT_RULES.md](AGENT_RULES.md)** — pravila za vse agente, tudi za seje v oblaku.
 * **[TODO.md](TODO.md)** — specifikacija, odločitve, odprto delo in koraki. *Tudi:* zahteve, kretnja L, markdown, zavihki.
 * **[src/gesture/](src/gesture/)** — kretnja L, kopija iz LibrePT.
+* **[src/](src/)** — aplikacija, ki se objavi na Pages (brez koraka gradnje).
+* **[tests/](tests/)** — testi `node --test` (shramba, markdown, kopija, service worker).
