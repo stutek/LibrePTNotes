@@ -16,6 +16,7 @@ Vsak `.js`, `.css` in `.html` pod `src/` je tu z eno vrstico. Sloji uvozov (glej
 * [src/app.css](../src/app.css) — videz aplikacije in barve obeh tem (svetla, temna po nastavitvi telefona).
 * [src/i18n.js](../src/i18n.js) — vsa besedila vmesnika v slovenščini (`STRINGS`, `t()`).
 * [src/sw.js](../src/sw.js) — service worker: predpomni vse iz kataloga gradnje in deluje brez povezave.
+* [src/fonts/fonts.css](../src/fonts/fonts.css) — pisave DM Sans, Outfit in JetBrains Mono (iz LibrePT, latin + latin-ext), ista izvora kot aplikacija.
 * [src/docs.css](../src/docs.css) — slogi generiranih dokumentov (zasebnost), brez zunanjih virov.
 * [src/privacy.html](../src/privacy.html) — stran o zasebnosti, generirana iz `PRIVACY.md` (`agent_tools/render_docs.py`).
 * [src/version.js](../src/version.js) — žig gradnje (commit in čas), ki ga prepiše gradnja.

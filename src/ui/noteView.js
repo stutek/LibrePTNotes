@@ -60,6 +60,7 @@ function getHost() {
   const toolbar = el(
     "div",
     { cls: "note-toolbar" },
+    el("span", { cls: "note-hint", text: view.t("noteHint") }),
     el("button", {
       cls: "delete-note danger",
       text: view.t("deleteNote"),

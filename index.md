@@ -10,6 +10,7 @@ tags: [index]
 * **[README.md](README.md)** — kaj je LibrePTNotes in kje teče.
 * **[AGENT_RULES.md](AGENT_RULES.md)** — pravila za vse agente, tudi za seje v oblaku.
 * **[PRIVACY.md](PRIVACY.md)** — zasebnost: kaj se shrani in kaj ne zapusti telefona; izvor strani `src/privacy.html`.
+* **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)** — licenčna obvestila za prevzete pisave (SIL OFL 1.1) in kopijo kretnje (MIT).
 * **[docs/modules.md](docs/modules.md)** — katalog modulov v `src/`, vsak z eno vrstico.
 * **[agent_tools/INDEX.md](agent_tools/INDEX.md)** — kontrole kakovosti za agente (`python -m agent_tools.<ime>`): kaj preverjajo in kdaj dodati novo.
 * **[use_cases/uc1_stranke.md](use_cases/uc1_stranke.md)** — UC1: stranke; vsak primer uporabe ima tabelo »obljuba → test«.

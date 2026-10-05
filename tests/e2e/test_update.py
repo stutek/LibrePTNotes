@@ -22,7 +22,7 @@ def publish_new_version(site):
     """Nova gradnja: N predpomnilnika +1 in spremenjena datoteka (katalog se izračuna sproti)."""
     site.edit("sw.js", "const CACHE_VERSION = 1;", "const CACHE_VERSION = 2;")
     site.edit(
-        "app.css", "/* Videz samo tukaj", "/* NOVA-RAZLIČICA */\n/* Videz samo tukaj"
+        "app.css", "/* Videz po LibrePT", "/* NOVA-RAZLIČICA */\n/* Videz po LibrePT"
     )
 
 

@@ -34,6 +34,11 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
           el(
             "li",
             { cls: "client-row" },
+            el("span", {
+              cls: "avatar",
+              text: [...c.name][0].toUpperCase(),
+              attrs: { "aria-hidden": "true" },
+            }),
             el("span", { cls: "client-name", text: c.name }),
             el(
               "div",

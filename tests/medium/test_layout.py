@@ -52,9 +52,11 @@ def test_vsi_gumbi_so_vsaj_44_px(crowded):
         assert box["width"] >= 44, label
 
 
-def test_zavihki_drsijo_sami_ne_stran(crowded):
+def test_zavihki_se_prelomijo_v_vrstice_in_stran_ne_drsi(crowded):
+    # As in LibrePT, many tabs wrap onto further rows instead of scrolling out of view.
     tabs = crowded.locator("#tabs")
-    assert tabs.evaluate("e => e.scrollWidth > e.clientWidth")
+    assert tabs.evaluate("e => e.scrollWidth <= e.clientWidth")
+    assert tabs.bounding_box()["height"] > 60
     assert overflow(crowded)["doc"] <= 390
 
 
