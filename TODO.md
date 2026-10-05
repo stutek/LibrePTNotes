@@ -55,8 +55,8 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 - [x] **Mešanje različic v predpomnilniku** (2026-10-05 12:23:53.130; rešeno: atomski predpomnilnik iz `integrity.json`, `libreptnotes-v<N>` z N = število commitov)
 - [ ] **Videz kot LibrePT** (2026-10-05 17:14:49.964): zdaj ima cela aplikacija barve VS Code in sistemsko pisavo; specifikacija predpisuje barve VS Code samo za markdown v urejevalniku. Predlog: svetla tema po LibrePT `src/modules/themes/daylight.css`, temna po `midnight.css`, po nastavitvi telefona; barve VS Code ostanejo v urejevalniku; samo vrednosti v `src/app.css`, brez pisav LibrePT. *Blokira:* videz; čaka Simonovo odločitev.
 - [ ] **Čas v zapisih v slovenskem času** (2026-10-05 17:14:49.964): seja v oblaku piše `date` v UTC (zapisi `09:30:55.822` so po našem času 11:30), zato je vrstni red zapisov v tej datoteki napačen. Predlog pravila v AGENT_RULES: `TZ=Europe/Ljubljana date '+%F %T.%N' | cut -c1-23`, in popravek obstoječih zapisov `09:30:55.822` → `11:30:55.822`. *Blokira:* vrstni red zapisov; čaka Simonovo odločitev.
-- [ ] **Stopnja 5 (ZAP)** (2026-10-05 15:43:08.932): v seji v oblaku ni Docker démona, zato `run_owasp_zap_scan` in `deploy/zap/zap-baseline.conf` nista bila nikoli pognana; prvi tek bo v Actions. Pričakuj, da bo treba izjeme v konfiguraciji dopolniti.
-- [ ] **Prvi tek vseh stopenj v Actions** (2026-10-05 15:43:08.932): lokalno so stopnje 1–4 zelene (`python -m build check`), v Actions še ni teklo; `pip-audit` in `playwright install` tam tečeta prvič.
+- [ ] **Stopnja 5 (ZAP)** (2026-10-05 15:57:46.858): prvi tek v Actions je pokazal edino opozorilo 10055 (CSP v glavi in v meta, namerno); dodana izjema z razlogom. Čaka na zelen tek.
+- [x] **Prvi tek v Actions** (2026-10-05 15:57:46.858): stopnje 1–4 zelene.
 
 ## 4. Koraki za sejo v oblaku
 
