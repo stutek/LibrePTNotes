@@ -20,7 +20,7 @@ Velja za vse agente. Seja v oblaku (claude.ai/code) skupnih pravil s Simonovega 
 
 - **Odločitve, ki jih `TODO.md` ne pokrije, sprejmi sam,** zapiši jih v `TODO.md` §2 z razlogom in jih naštej v telesu commita. Vprašaj le, kadar bi napačna izbira zavrgla delo.
 - **Trunk-based za lastnika, PR za prispevke:** Simon in agenti, ki delajo zanj (tudi seja v oblaku), commitajo neposredno na `main` v majhnih commitih, brez vej. Zunanji prispevki pridejo prek pull requesta, ki ga pregleda Simon. Seja v oblaku potisne na `main` po vsakem preverjenem koraku; lokalni agent potisne šele s Simonovo odobritvijo. Objava na Pages teče samo, če testi uspejo.
-- **Majhni koraki, vsak preverjen:** za logiko test pred kodo (`node --test`), za kretnjo in izris preizkus v brskalniku pri širini telefona (390 px). V telesu commita navedi, kaj je bilo preverjeno in kako.
+- **Majhni koraki, vsak preverjen:** za logiko test pred kodo (`tests/unit_js`, `node --test`); pred potiskom `.venv/bin/python -m build check` (kontrole kot v LibrePT; stopnja 5 ZAP potrebuje Docker), za kretnjo in izris preizkus v brskalniku pri širini telefona (390 px). V telesu commita navedi, kaj je bilo preverjeno in kako.
 - **Commit:** en logičen korak, sporočilo `type(scope): povzetek` (≤ 72 znakov), telo pove zakaj, zadnja vrstica `Co-Authored-By: <model> <email>`.
 - **Čas** v zapisih iz `date` na milisekundo: `date '+%F %T.%N' | cut -c1-23`.
 - Vsaka markdown datoteka ima frontmatter (`type`, `title`, `description`, `tags`) in je vpisana v `index.md`.
