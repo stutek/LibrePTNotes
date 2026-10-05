@@ -17,8 +17,8 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 4. **Kretnja L, enaka kot v LibrePT** (`src/gesture/planPeek.js`): pritisk in zadržanje zoži trenutni zapis; poteg vstran pokaže prejšnji ali naslednji zapis iste stranke pod njim; ko je odkrite vsaj 25 % širine, poteg navzgor za 64 px odpre odkriti zapis; vsak spust brez potega navzgor se vrne nazaj. Kadar je trenutni zapis najnovejši, je na strani naslednjega kartica »Nov zapis«; L jo odpre kot nov zapis s trenutnim datumom.
 5. **Barvanje markdowna v urejevalniku:** besedilo ostane navadno; barvajo se naslovi, krepko in ležeče, seznami, citati, koda (vrstična in bloki) in povezave, v barvah teme VS Code (Dark+ ali Light+ po nastavitvi telefona).
 6. **Brez povezave:** PWA z imenom LibrePTNotes in lastno ikono; service worker z obsegom `/LibrePTNotes/`; deluje brez povezave.
-7. **Objava:** GitHub Pages iz tega repa prek GitHub Actions na `https://stutek.github.io/LibrePTNotes/`; objavi se samo `src/`.
-8. **Varnostna kopija** (Simon, 2026-10-05 11:05:06.688): gumb »Izvozi« prenese vse stranke in zapise kot datoteko JSON; »Uvozi« jih po potrditvi naloži nazaj in nadomesti obstoječe.
+7. **Objava:** GitHub Pages iz tega repa prek GitHub Actions na `https://stutek.github.io/LibrePTNotes/`; objavi se samo `src/`. Domena ostane `stutek.github.io`, brez lastne domene (Simon, 2026-10-05 11:16:00.450).
+8. **Varnostna kopija** (Simon, 2026-10-05 11:16:00.450): enak mehanizem kot v LibrePT. Šifrirana datoteka z geslom v zapisu LibrePT (`src/data/backupFile.js`, `backupEncryption.js`, `passphraseKey.js`, `backupKeyStore.js`): shrani kopijo in obnovi. Ali tudi Google Drive, je odprto (§3).
 
 ## 2. Odločitve agenta (preglej)
 
@@ -26,11 +26,13 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 - **Besedila v slovenščini** (2026-10-05 10:53:59.617).
 - **Kretnja kot kopija** (2026-10-05 10:53:59.617): `src/gesture/planPeek.js` in `.css` sta kopiji iz LibrePT (`src/modules/clipboard/planPeek.*`, commit 403715f9, MIT). Repo je ločen, zato se kopija lahko oddalji od LibrePT.
 - **Objava samo po uspešnih testih** (2026-10-05 11:03:59.521): delo teče trunk-based neposredno na `main`, zato potek GitHub Actions pred objavo na Pages požene `node --test` in ob napaki ne objavi. Brez tega bi vsak pokvarjen potisk takoj prišel na spletno stran.
+- **Relativne poti** (2026-10-05 11:16:00.450): `./sw.js`, obseg service workerja `./`, relativne povezave v manifestu. Aplikacija tako deluje na kateri koli poti in domeni brez spremembe kode.
 
 ## 3. Odprto
 
-- [x] **Varnostna kopija** (2026-10-05 10:53:59.617; odločeno 2026-10-05 11:05:06.688): izvoz in uvoz JSON, §1 točka 8.
-- [ ] **LibrePT briše predpomnilnik LibrePTNotes** (2026-10-05 11:01:54.206): izvor `stutek.github.io` je skupen, LibrePT pa ob vsaki posodobitvi izbriše vse predpomnilnike razen svojih (LibrePT `src/sw/cacheManifest.js` `deleteObsoleteCaches`, `src/controllers/appLifecycleController.js` `clearCachesAndReload` ob napaki celovitosti, ki odregistrira tudi vse service workerje na domeni, torej tudi tega od LibrePTNotes). Po posodobitvi LibrePT se LibrePTNotes brez povezave ne odpre, dokler je enkrat ne odpreš s povezavo. Popravek v LibrePT (Simon odobril 2026-10-05 11:05:06.688): brisati samo ključe s predpono `librept-` (`libreptnotes-` se s to predpono ne ujema) in odregistrirati samo service worker z obsegom LibrePT. Do takrat LibrePTNotes ob vsakem zagonu s povezavo predpomnilnik napolni znova. *Blokira:* zanesljivo delo brez povezave (§1 točka 6).
+- [x] **Varnostna kopija** (2026-10-05 10:53:59.617; odločeno 2026-10-05 11:16:00.450): šifrirana datoteka kot v LibrePT, §1 točka 8.
+- [ ] **Google Drive v varnostni kopiji** (2026-10-05 11:16:00.450): LibrePT kopijo pošilja tudi v skrito mapo trenerjevega Google Drive (`drive.appdata`) s svojim Googlovim odjemalcem; na isti domeni bi ga LibrePTNotes lahko uporabil, a bi pisal v isto skrito mapo kot LibrePT (potrebno svoje ime datoteke), prijava bi kazala ime LibrePT, pravilo »nič ne gre na strežnik« pa bi se spremenilo. *Blokira:* obseg varnostne kopije.
+- [ ] **LibrePT briše predpomnilnik LibrePTNotes** (2026-10-05 11:01:54.206): izvor `stutek.github.io` je skupen, LibrePT pa ob vsaki posodobitvi izbriše vse predpomnilnike razen svojih (LibrePT `src/sw/cacheManifest.js` `deleteObsoleteCaches`, `src/controllers/appLifecycleController.js` `clearCachesAndReload` ob napaki celovitosti, ki odregistrira tudi vse service workerje na domeni, torej tudi tega od LibrePTNotes). Po posodobitvi LibrePT se LibrePTNotes brez povezave ne odpre, dokler je enkrat ne odpreš s povezavo. Popravek v LibrePT (Simon odobril 2026-10-05 11:05:06.688): brisati samo ključe s predpono `librept-` (`libreptnotes-` se s to predpono ne ujema) in odregistrirati samo service worker z obsegom LibrePT. Do takrat LibrePTNotes ob vsakem zagonu s povezavo predpomnilnik napolni znova. *Blokira:* zanesljivo delo brez povezave (§1 točka 6); ker domena ostane skupna (2026-10-05 11:16:00.450), je popravek pogoj, ne izboljšava.
 
 ## 4. Koraki za sejo v oblaku
 
@@ -39,5 +41,5 @@ Minimalna različica [LibrePT](https://github.com/stutek/LibrePT): samo beležni
 3. Stranke in zavihki.
 4. Zapisi z datumom in barvanje markdowna.
 5. Kretnja L: priklop `src/gesture/planPeek.js` na zapis.
-6. Izvoz in uvoz (§1 točka 8) s testi `node --test`.
+6. Varnostna kopija s šifrirano datoteko (§1 točka 8) s testi `node --test`; Google Drive ne, dokler §3 ni odločen.
 7. Preizkus v brskalniku pri 390 px; v telesu commita opis, kaj je bilo preverjeno.
