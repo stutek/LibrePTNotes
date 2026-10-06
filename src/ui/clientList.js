@@ -57,6 +57,7 @@ export function renderClientList(
     },
   });
   let adding = false;
+  let warnedAbout = null; // podvojeno ime, na katero je bil trener že opozorjen
   const error = el("p", {
     cls: "form-error",
     text: t("clientNameRequired"),
@@ -75,6 +76,15 @@ export function renderClientList(
           e.preventDefault();
           const name = input.value.trim();
           if (!name) {
+            error.textContent = t("clientNameRequired");
+            error.hidden = false;
+            return;
+          }
+          // Dve stranki z istim imenom se ne ločita: opozori, ob ponovnem dotiku pa dovoli (res sta dve).
+          const key = name.toLocaleLowerCase("sl");
+          if (clients.some((c) => c.name.toLocaleLowerCase("sl") === key) && warnedAbout !== key) {
+            warnedAbout = key;
+            error.textContent = t("clientNameExists");
             error.hidden = false;
             return;
           }

@@ -5,12 +5,12 @@ export function formatDateTime(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-const DATE_TIME = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/;
+// Prijazen vnos: »T« namesto presledka, brez vodilnih ničel (2026-1-7 8:05); vse se normalizira.
+const DATE_TIME = /^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})$/;
 
-/** Vrne obrezan `YYYY-MM-DD HH:MM`, če je to veljaven koledarski datum in 24-urna ura, sicer null. */
+/** Vrne `YYYY-MM-DD HH:MM`, če je to veljaven koledarski datum in 24-urna ura, sicer null. */
 export function parseDateTime(text) {
-  const clean = typeof text === "string" ? text.trim() : "";
-  const m = DATE_TIME.exec(clean);
+  const m = DATE_TIME.exec(typeof text === "string" ? text.trim() : "");
   if (!m) return null;
   const [year, month, day, hour, minute] = m.slice(1).map(Number);
   const date = new Date(year, month - 1, day, hour, minute);
@@ -20,5 +20,5 @@ export function parseDateTime(text) {
     date.getDate() === day &&
     date.getHours() === hour &&
     date.getMinutes() === minute;
-  return same ? clean : null;
+  return same ? formatDateTime(date) : null;
 }

@@ -46,8 +46,15 @@ let onForeign = () => {};
 export function onForeignEdit(handler) {
   onForeign = handler;
 }
-channel?.addEventListener("message", (event) => {
-  if (event.data?.noteId && event.data.noteId === view.currentId) onForeign();
+channel?.addEventListener("message", async (event) => {
+  if (!event.data?.noteId || event.data.noteId !== view.currentId) return;
+  // Brez lastnih neshranjenih sprememb se zapis tiho osveži (oba zavihka kažeta isto); sicer opozorilo.
+  if (pending) return onForeign();
+  const fresh = await view.store.listNotes(view.client.id);
+  if (pending || !fresh.some((n) => n.id === view.currentId)) return onForeign();
+  const hadFocus = document.activeElement?.classList.contains("md-input");
+  view.notes = fresh;
+  paint({ focus: hadFocus });
 });
 
 // Neshranjeno besedilo; izplakne se pred menjavo zapisa, ob skritju strani in ob zaprtju.
@@ -111,11 +118,18 @@ function getHost() {
   const blanket = el("div", { cls: "plan-peek-blanket", attrs: { id: "note-blanket" } });
   const past = underLayer("past");
   const future = underLayer("future");
+  const bar = buildBar();
   host = {
-    root: el("div", { cls: "note-page" }, el("div", { cls: "peek-host" }, blanket, past, future)),
+    root: el(
+      "div",
+      { cls: "note-page" },
+      el("div", { cls: "peek-host" }, blanket, past, future),
+      bar.root,
+    ),
     blanket,
     past,
     future,
+    bar,
   };
   initPlanPeek(blanket, {
     getUnderLayers: () => ({ past: host.past, future: host.future }),
@@ -154,24 +168,80 @@ function currentIndex() {
   return view.notes.findIndex((n) => n.id === view.currentId);
 }
 
-function openSide(side) {
+// Prazen zapis (brez naslova in besedila): nov zapis ob njem je odveč, trener ga najbrž še ni začel.
+const isBlank = (note) => !note.title?.trim() && !note.text.trim();
+
+function goTo(note) {
   endDateEdit({ apply: true });
-  dismissGestureHint();
-  const index = currentIndex();
-  const target = view.notes[index + (side === "past" ? -1 : 1)];
-  if (target) {
-    view.currentId = target.id;
-    paint();
-    guarded(view.store.setCurrentNote(view.client.id, target.id));
+  view.currentId = note.id;
+  paint();
+  guarded(view.store.setCurrentNote(view.client.id, note.id));
+}
+
+// Nov zapis s trenutnim datumom na koncu; ob praznem trenutnem zapisu ostane pri njem (fokus), da se
+// seznam ne polni s praznimi zapisi (kretnja ali gumb po pomoti).
+function newNote() {
+  endDateEdit({ apply: true });
+  const current = view.notes[currentIndex()];
+  if (current && isBlank(current) && currentIndex() === view.notes.length - 1) {
+    document.querySelector(".plan-peek-blanket .md-input")?.focus();
     return;
   }
-  if (side !== "future") return;
-  // Najnovejši zapis: L odpre novega s trenutnim datumom.
   const note = view.store.draftNote(view.client.id);
   view.notes = sortNotes([...view.notes, note]);
   view.currentId = note.id;
   paint({ focus: true });
   guarded(view.store.commitNote(note));
+}
+
+function openSide(side) {
+  endDateEdit({ apply: true });
+  dismissGestureHint();
+  const target = view.notes[currentIndex() + (side === "past" ? -1 : 1)];
+  if (target) return goTo(target);
+  if (side === "future") newNote(); // najnovejši zapis: L odpre novega
+}
+
+// Skok na kateri koli zapis: seznam od najnovejšega, z naslovom ali začetkom besedila.
+function openJumpList() {
+  const items = [...view.notes].reverse().map((note) => {
+    const label = noteLabel(note);
+    const parts = [note.date];
+    if (label !== note.date) parts.push(label);
+    const mark = note.id === view.currentId ? view.t("currentMark") : "";
+    return { label: mark + parts.join(view.t("separator")), onClick: () => goTo(note) };
+  });
+  openMenu({ title: view.t("noteJump"), items, closeLabel: view.t("menuClose") });
+}
+
+function buildBar() {
+  const button = (cls, text, label, onClick) =>
+    el("button", {
+      cls,
+      text,
+      attrs: { type: "button", "aria-label": label },
+      on: { click: onClick },
+    });
+  const prev = button("note-prev", "‹", view.t("notePrev"), () => openSide("past"));
+  const next = button("note-next", "›", view.t("noteNext"), () => openSide("future"));
+  const jump = button("note-count note-jump", "", view.t("noteJump"), openJumpList);
+  const add = button(
+    "note-new primary",
+    `+ ${view.t("noteNewShort")}`,
+    view.t("noteNewShort"),
+    () => {
+      dismissGestureHint();
+      newNote();
+    },
+  );
+  return { root: el("div", { cls: "note-bar" }, prev, jump, next, add), prev, next, jump };
+}
+
+function updateBar(index) {
+  const bar = host.bar;
+  bar.jump.textContent = `${index + 1} / ${view.notes.length}`;
+  bar.prev.disabled = index <= 0;
+  bar.next.disabled = index >= view.notes.length - 1;
 }
 
 function buildEditor(note) {
@@ -374,12 +444,7 @@ function paint({ focus = false } = {}) {
   );
   head.append(
     el("div", { cls: "note-head-row" }, title, menuButton),
-    el(
-      "div",
-      { cls: "note-head-row" },
-      dateButton,
-      el("span", { cls: "note-count", text: `${index + 1} / ${view.notes.length}` }),
-    ),
+    el("div", { cls: "note-head-row" }, dateButton),
   );
   const coach = view.gestureHint
     ? el(
@@ -393,7 +458,9 @@ function paint({ focus = false } = {}) {
         }),
       )
     : null;
-  blanket.replaceChildren(head, coach, el("div", { cls: "note-body" }, wrap));
+  // `coach` je po potrditvi namiga null: replaceChildren(null) bi vstavil besedilo »null«.
+  blanket.replaceChildren(...[head, coach, el("div", { cls: "note-body" }, wrap)].filter(Boolean));
+  updateBar(index);
   paintUnder(past, "past", view.notes[index - 1]);
   paintUnder(future, "future", view.notes[index + 1]);
   if (focus) input.focus();

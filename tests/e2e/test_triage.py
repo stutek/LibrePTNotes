@@ -34,23 +34,6 @@ def test_seznam_strank_obdrži_drsenje_po_vrnitvi_z_zavihka(page, base_url):
     assert top > 800, f"seznam se je vrnil na vrh: {top}"
 
 
-def test_isti_zapis_v_drugem_zavihku_brskalnika_opozori(page, base_url):
-    seed(
-        page,
-        base_url,
-        [{"name": "Ana", "notes": [{"date": "2026-10-01 09:00", "text": "prvi"}]}],
-        tabs={"open": ["Ana"], "active": "Ana"},
-    )
-    other = page.context.new_page()
-    other.goto(base_url)
-    other.wait_for_selector(".plan-peek-blanket .md-input")
-    page.wait_for_selector(".plan-peek-blanket .md-input")
-    expect(page.locator(".conflict-error")).to_have_count(0)
-    other.locator(".plan-peek-blanket .md-input").fill("pisano v drugem zavihku")
-    expect(page.locator(".conflict-error")).to_be_visible()
-    expect(page.locator(".conflict-error")).to_contain_text("drugem zavihku")
-
-
 def test_ležeči_telefon_pusti_dovolj_prostora_za_pisanje(
     browser, browser_context_args, base_url
 ):

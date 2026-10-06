@@ -103,7 +103,7 @@ def peek_previous(page):
 
 
 def count(page):
-    return page.locator(".plan-peek-blanket .note-count").inner_text()
+    return page.locator(".note-count").inner_text()
 
 
 def test_priprava_nacrta_in_trening(scenario):

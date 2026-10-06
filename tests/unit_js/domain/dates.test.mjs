@@ -13,10 +13,14 @@ test("parseDateTime sprejme samo YYYY-MM-DD HH:MM z veljavnim koledarskim datumo
   assert.equal(parseDateTime("2026-10-05 14:30"), "2026-10-05 14:30");
   assert.equal(parseDateTime("  2026-02-28 00:00 "), "2026-02-28 00:00");
   assert.equal(parseDateTime("2028-02-29 23:59"), "2028-02-29 23:59", "prestopno leto");
+  // Prijazen vnos (najdba raziskovalnega testiranja): brez vodilne ničle in z »T« se normalizira.
+  assert.equal(parseDateTime("2026-10-07 8:05"), "2026-10-07 08:05");
+  assert.equal(parseDateTime("2026-1-7 8:05"), "2026-01-07 08:05");
+  assert.equal(parseDateTime("2026-10-05T14:30"), "2026-10-05 14:30");
   for (const bad of [
     "",
     "2026-10-05",
-    "2026-10-05T14:30",
+    "06.10.2026 18:30",
     "2026-10-05 2:30 PM",
     "2026-10-05 24:00",
     "2026-10-05 14:60",

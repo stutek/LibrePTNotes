@@ -37,7 +37,7 @@ const STRINGS = {
   pwUnlockTitle: "Odkleni kopijo",
   pwUnlockLead: "Vpiši geslo, s katerim je bila kopija shranjena.",
   pwLabel: "Geslo",
-  pwNew: "Drugo",
+  pwNew: "Novo geslo",
   pwCopy: "Kopiraj",
   pwCopied: "Kopirano.",
   pwCopyFailed: "Kopiranje ni uspelo; geslo je na zaslonu.",
@@ -67,6 +67,13 @@ const STRINGS = {
     "Shranjevanje ni uspelo: brskalnik ne dovoli pisanja v shrambo. Kar si vpisal, kopiraj drugam in znova naloži aplikacijo.",
   conflictNotice:
     "Ta zapis je bil spremenjen v drugem zavihku brskalnika. Osveži, sicer boš pisal čez njegovo besedilo.",
+  separator: " · ",
+  currentMark: "● ",
+  notePrev: "Prejšnji zapis",
+  noteNext: "Naslednji zapis",
+  noteJump: "Skoči na zapis",
+  noteNewShort: "Nov zapis",
+  clientNameExists: "Stranka s tem imenom že obstaja. Tapni znova, če jo res želiš dodati.",
   notePlaceholder: "Piši tukaj …",
   deleteNoteConfirm: "Izbrišem zapis {date} (»{preview}«)? Tega ni mogoče razveljaviti.",
   backupPasswordForgetConfirm:

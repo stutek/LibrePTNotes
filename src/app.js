@@ -28,6 +28,18 @@ let keyStore;
 let listScroll = 0; // drsenje seznama strank, da se po vrnitvi z zavihka ne vrne na vrh
 let dialog;
 
+// Tipka Nazaj: pogled stranke je svoj vnos v zgodovini, zato Nazaj vrne na seznam, ne iz aplikacije.
+function enterClientView() {
+  if (history.state?.view !== "client") history.pushState({ view: "client" }, "");
+}
+
+async function showList() {
+  // Iz pogleda stranke gre prek zgodovine (popstate izriše seznam), sicer neposredno.
+  if (history.state?.view === "client") return history.back();
+  await store.setActiveTab(null);
+  render();
+}
+
 async function render(status) {
   const [clients, tabs] = await Promise.all([store.listClients(), store.getTabs()]);
   renderTabs(tabsRoot, {
@@ -36,12 +48,16 @@ async function render(status) {
     tabs,
     onSelect: async (id) => {
       await flushPendingSave();
+      if (id === null) return showList();
       await store.setActiveTab(id);
+      enterClientView();
       render();
     },
     onClose: async (id) => {
       await flushPendingSave();
+      const wasActive = tabs.active === id;
       await store.closeTab(id);
+      if (wasActive) return showList();
       render();
     },
   });
@@ -71,6 +87,7 @@ async function render(status) {
       if (clients.length === 0) {
         // Prva stranka: takoj v zapis, pripravljen za pisanje (kot prazen dokument), brez dodatnega koraka.
         await store.openTab(client.id);
+        enterClientView();
         await store.addNote(client.id);
         focusNextNoteView();
       }
@@ -78,6 +95,7 @@ async function render(status) {
     },
     onOpen: async (id) => {
       await store.openTab(id);
+      enterClientView();
       render();
     },
     onRename: async (client) => {
@@ -176,6 +194,17 @@ async function start() {
   keyStore = createBackupKeyStore(backend);
   dialog = setupPasswordDialog({ t, keyStore });
   await render();
+  // Osvežitev v pogledu stranke: zgodovina še nima vnosa za Nazaj.
+  if ((await store.getTabs()).active && history.state?.view !== "client") {
+    history.replaceState({ view: "list" }, "");
+    enterClientView();
+  }
+  addEventListener("popstate", async () => {
+    if (history.state?.view === "client") return;
+    await flushPendingSave();
+    await store.setActiveTab(null);
+    render();
+  });
 }
 
 watchForUpdate({ t, beforeReload: flushPendingSave });
