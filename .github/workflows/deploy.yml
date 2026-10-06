@@ -155,6 +155,7 @@ jobs:
   # both places.
   medium-tests:
     name: Stage 2 · Medium Component Tests
+    timeout-minutes: 20
     needs:
       [
         python-lint,
@@ -179,6 +180,7 @@ jobs:
   # === STAGE 3 === only if Stage 2 is clean.
   e2e-tests:
     name: Stage 3 · E2E Browser Tests
+    timeout-minutes: 20
     needs: [medium-tests]
     runs-on: ubuntu-latest
     steps:
@@ -194,6 +196,7 @@ jobs:
   # work in hand does not hold yet".
   regression-tests:
     name: Stage 4 · Regression Suite (frozen backups)
+    timeout-minutes: 20
     needs: [e2e-tests]
     runs-on: ubuntu-latest
     steps:
@@ -209,6 +212,7 @@ jobs:
   # the stage numbers mean one thing in both places. System Python: the scan itself runs in Docker.
   owasp-zap-scan:
     name: Stage 5 · OWASP ZAP Security Scan
+    timeout-minutes: 20
     needs: [regression-tests]
     runs-on: ubuntu-latest
     steps:

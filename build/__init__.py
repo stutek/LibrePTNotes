@@ -752,6 +752,9 @@ def _run_browser_suite(directory, log_name, label, workers=None):
             str(workers or _playwright_worker_count()),
             "-q",
             "--tb=long",
+            # A hung test must fail by name, not hold the stage until the runner's 6 h limit
+            # (run 19 of the Pages workflow did exactly that, with no output to say which test).
+            "--timeout=90",
             directory,
         ],
         log_name,
