@@ -458,7 +458,7 @@ input.note-date-input.is-invalid:focus {
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--primary-light);
-  color: var(--primary);
+  color: var(--text-main);
   font-size: 13px;
   font-weight: 700;
 }
@@ -498,7 +498,7 @@ input.note-date-input.is-invalid:focus {
   margin: 0;
   padding: 14px;
   border: 0;
-  font: 15px / 1.6 var(--font-mono);
+  font: 16px / 1.6 var(--font-mono);
   letter-spacing: 0;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -606,12 +606,21 @@ input.note-date-input.is-invalid:focus {
   padding: 0 4px;
 }
 
-.storage-error {
+.storage-error,
+.save-error {
   margin: 12px;
   padding: 14px;
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: var(--border-radius-lg);
   background: var(--danger-light);
   color: var(--danger);
+  font-weight: 600;
+}
+
+.form-error {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
   font-weight: 600;
 }

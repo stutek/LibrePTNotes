@@ -157,12 +157,7 @@ test("datoteke, ki niso naše, se zavrnejo", async () => {
   const dev = device();
   await setBackupPassword("g", dev.keyStore);
   const opts = { keyStore: dev.keyStore, askPassword: never };
-  for (const bad of [
-    "ni json",
-    "{}",
-    JSON.stringify({ formatVersion: 4, clients: [] }),
-    JSON.stringify({ formatVersion: 7, container: "aes-gcm", ciphertext: "x" }),
-  ]) {
+  for (const bad of ["ni json", "{}", JSON.stringify({ formatVersion: 4, clients: [] })]) {
     await assert.rejects(
       () => readBackup(bad, opts),
       (e) => e.code === "bad-file",
@@ -195,4 +190,86 @@ test("ključ iz datoteke je enak ključu, ki jo je zapisal", async () => {
   const { text } = await createBackup(dev);
   const { key } = await deriveKeyForEnvelope(JSON.parse(text), "isto");
   assert.ok(key);
+});
+
+// Odklep z geslom, kot ga vrne dialog: ključ je izpeljan, ničesar še ni shranjenega.
+const typed = (password, remember) => async (envelope) => ({
+  ...(await unlockWithPassword(envelope, password, createBackupKeyStore(memoryBackend()))),
+  remember,
+});
+
+test("napačno geslo z obkljukanim »zapomni si« ne prepiše shranjenega gesla in ne shrani drugega", async () => {
+  const other = device();
+  await seeded(other);
+  await setBackupPassword("pravo-geslo", other.keyStore);
+  const { text } = await createBackup(other);
+
+  const mine = device();
+  const before = await setBackupPassword("moje-geslo", mine.keyStore);
+  await assert.rejects(
+    () =>
+      restoreBackup(text, {
+        ...mine,
+        askPassword: typed("zgresen-vnos", true),
+        confirmReplace: async () => true,
+      }),
+    (e) => e.code === "wrong-password",
+  );
+  const after = await mine.keyStore.read();
+  assert.deepEqual([...after.salt], [...before.salt], "sol (torej ključ) je nespremenjena");
+  assert.equal(after.setAt, before.setAt);
+});
+
+test("na novi napravi se ključ iz datoteke shrani šele po uspešnem odklepu", async () => {
+  const old = device();
+  await seeded(old);
+  await setBackupPassword("pravo-geslo", old.keyStore);
+  const { text } = await createBackup(old);
+
+  const fresh = device();
+  await assert.rejects(
+    () =>
+      restoreBackup(text, {
+        ...fresh,
+        askPassword: typed("napacno", true),
+        confirmReplace: async () => true,
+      }),
+    (e) => e.code === "wrong-password",
+  );
+  assert.equal(await hasBackupPassword(fresh.keyStore), false, "po napaki ni shranjeno nič");
+  await restoreBackup(text, {
+    ...fresh,
+    askPassword: typed("pravo-geslo", true),
+    confirmReplace: async () => true,
+  });
+  assert.equal(await hasBackupPassword(fresh.keyStore), true);
+  await restoreBackup(text, { ...fresh, askPassword: never, confirmReplace: async () => true });
+});
+
+test("že nastavljeno geslo naprave se ob odklepu druge datoteke nikoli ne prepiše", async () => {
+  const old = device();
+  await seeded(old);
+  await setBackupPassword("tuje-geslo", old.keyStore);
+  const { text } = await createBackup(old);
+
+  const mine = device();
+  const before = await setBackupPassword("moje-geslo", mine.keyStore);
+  await restoreBackup(text, {
+    ...mine,
+    askPassword: typed("tuje-geslo", true),
+    confirmReplace: async () => true,
+  });
+  assert.deepEqual([...(await mine.keyStore.read()).salt], [...before.salt]);
+});
+
+test("kopija novejše različice se zavrne z lastno kodo, ne kot »ni kopija«", async () => {
+  const dev = device();
+  await assert.rejects(
+    () =>
+      readBackup(JSON.stringify({ formatVersion: 7, container: "aes-gcm", ciphertext: "x" }), {
+        keyStore: dev.keyStore,
+        askPassword: never,
+      }),
+    (e) => e.code === "newer",
+  );
 });

@@ -1,7 +1,7 @@
 """Urejanje datuma zapisa (specifikacija: datum je urejljiv): besedilno polje, veljaven vnos, `created` ostane."""
 
 import pytest
-from app_helpers import db_state, seed
+from app_helpers import Touch, db_state, seed, wait_for_saved
 from playwright.sync_api import expect
 
 NOTES = [
@@ -75,3 +75,48 @@ def test_polje_je_besedilno_in_24_urno_ne_glede_na_telefon(note_page):
     assert field.get_attribute("inputmode") == "numeric"
     box = field.bounding_box()
     assert box["height"] >= 44
+
+
+def gesture_to(page, dx):
+    """Kretnja L: zadrži, povleci vstran (dx), povleci navzgor."""
+    touch = Touch(page)
+    touch.hold(195, 400)
+    touch.pull(dx)
+    touch.raise_(90)
+    touch.up()
+
+
+def test_kretnja_z_odprtim_poljem_datuma_ustvari_zapis_in_ga_shrani(page, base_url):
+    # Najdba raziskovalnega testiranja: nov zapis je izginil in v konzoli je bila napaka, ker je
+    # polje datuma ostalo odprto, ko ga je kretnja zamenjala.
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    seed(
+        page,
+        base_url,
+        [{"name": "Ana", "notes": NOTES, "current": 2}],
+        tabs={"open": ["Ana"], "active": "Ana"},
+    )
+    page.wait_for_selector(".note-date")
+    page.locator(".note-date").click()
+    expect(page.locator(".note-date-input")).to_be_visible()
+    gesture_to(page, -150)
+    expect(page.locator(".note-count")).to_have_text("4 / 4")
+    page.locator(".plan-peek-blanket .md-input").fill("nov zapis po kretnji")
+    wait_for_saved(page, "Ana", ["prvi", "drugi", "tretji", "nov zapis po kretnji"])
+    page.reload()
+    expect(page.locator(".note-count")).to_have_text("4 / 4")
+    expect(page.locator(".plan-peek-blanket .md-input")).to_have_value(
+        "nov zapis po kretnji"
+    )
+    assert errors == []
+
+
+def test_kretnja_na_sosednji_zapis_zapre_polje_datuma(note_page):
+    errors = []
+    note_page.on("pageerror", lambda e: errors.append(str(e)))
+    note_page.locator(".note-date").click()
+    gesture_to(note_page, 150)
+    expect(note_page.locator(".note-date")).to_have_text("2026-10-01 09:00")
+    expect(note_page.locator(".note-date-input")).to_have_count(0)
+    assert errors == []

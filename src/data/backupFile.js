@@ -15,7 +15,7 @@ export const MAX_KDF_ITERATIONS = 10_000_000; // LibrePT piše 600.000
 export class BackupError extends Error {
   constructor(code) {
     super(code);
-    this.code = code; // no-password | bad-file | foreign | wrong-password | cancelled
+    this.code = code; // no-password | bad-file | newer | foreign | wrong-password | cancelled
   }
 }
 
@@ -58,8 +58,11 @@ function parseEnvelope(text) {
     throw new BackupError("bad-file");
   }
   // Neznana različica je zavrnitev, ne ugibanje: ovojnica novejše različice se ne sme brati kot prazna baza.
-  if (!isEncryptedBackup(parsed) || parsed.formatVersion !== ENCRYPTED_BACKUP_FORMAT)
-    throw new BackupError("bad-file");
+  if (!isEncryptedBackup(parsed)) throw new BackupError("bad-file");
+  // Datoteka novejše različice je prava kopija, ki je ta različica ne zna brati: to povej, ne »ni kopija«.
+  if (Number.isInteger(parsed.formatVersion) && parsed.formatVersion > ENCRYPTED_BACKUP_FORMAT)
+    throw new BackupError("newer");
+  if (parsed.formatVersion !== ENCRYPTED_BACKUP_FORMAT) throw new BackupError("bad-file");
   // Število ponovitev bere iz datoteke (starejše datoteke imajo manj); previsoko število bi telefon
   // zamrznilo, zato ga zavrne.
   const iterations = parsed.kdf?.iterations;
@@ -99,12 +102,20 @@ export async function readBackup(text, { keyStore, askPassword, cryptoImpl = glo
     }
   }
   if (!payload) {
-    const key = await askPassword(envelope);
-    if (!key) throw new BackupError("cancelled");
+    const answer = await askPassword(envelope);
+    if (!answer) throw new BackupError("cancelled");
+    // Dialog vrne {key, salt, iterations, remember}; golo ključ je tudi veljaven odgovor.
+    const unlocked = answer.key ? answer : { key: answer };
     try {
-      payload = await decryptBackup(envelope, { key, cryptoImpl });
+      payload = await decryptBackup(envelope, { key: unlocked.key, cryptoImpl });
     } catch {
       throw new BackupError("wrong-password");
+    }
+    // Ključ se shrani šele, ko je geslo dokazano pravo, in nikoli čez geslo, ki ga naprava že ima:
+    // zgrešen vnos bi sicer tiho zamenjal geslo, s katerim se pišejo kopije.
+    if (unlocked.remember && !record) {
+      const { key, salt, iterations } = unlocked;
+      await keyStore.write({ key, salt, iterations, setAt: Date.now() });
     }
   }
   if (payload?.app !== APP_ID || !Array.isArray(payload.clients) || !Array.isArray(payload.notes))

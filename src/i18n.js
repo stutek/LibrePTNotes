@@ -60,8 +60,15 @@ const STRINGS = {
   dateInvalid: "Datum mora biti v obliki 2026-10-05 14:30 (24-urna ura).",
   storageUnavailable:
     "Shramba v brskalniku ni na voljo (zasebno okno ali onemogočena shramba), zato zapisov ni mogoče shraniti. Odpri aplikacijo v navadnem oknu.",
-  noteHint: "Zadrži in povleci vstran za sosednji zapis",
-  deleteNoteConfirm: "Izbrišem zapis {date}? Tega ni mogoče razveljaviti.",
+  saveFailed:
+    "Shranjevanje ni uspelo: brskalnik ne dovoli pisanja v shrambo. Kar si vpisal, kopiraj drugam in znova naloži aplikacijo.",
+  noteHint: "Povleci vstran in nato navzgor: prejšnji, naslednji ali nov zapis",
+  deleteNoteConfirm: "Izbrišem zapis {date} (»{preview}«)? Tega ni mogoče razveljaviti.",
+  backupPasswordForgetConfirm:
+    "Pozabim geslo na tej napravi? Kopij ne boš mogel shraniti, dokler ga ne nastaviš znova.",
+  backupNewer:
+    "Datoteka je iz novejše različice LibrePTNotes. Posodobi aplikacijo in poskusi znova.",
+  clientNameRequired: "Vpiši ime stranke.",
   updateAvailable: "Na voljo je nova različica",
   updateRefresh: "Osveži",
   versionLabel: "Različica",

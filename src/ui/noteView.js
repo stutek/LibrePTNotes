@@ -11,7 +11,21 @@ import { initPlanPeek } from "../gesture/planPeek.js";
 import { el } from "./dom.js";
 import { highlightBlock, paintHighlight } from "./highlight.js";
 
-const SAVE_DELAY_MS = 400;
+// Kratek zamik: zaprtje ali osvežitev strani takoj po tipkanju ne počaka na asinhroni zapis v
+// IndexedDB, zato je okno za izgubo besedila toliko krajše (raziskovalno testiranje: do ~0,4 s).
+const SAVE_DELAY_MS = 200;
+
+// Neuspešen zapis (brskalnik je zaprl ali izbrisal bazo) mora biti viden: tipkanje sicer izgleda
+// shranjeno, po osvežitvi pa je vse izgubljeno. `report(napaka)` ob uspehu dobi null.
+let report = () => {};
+export function onSaveResult(handler) {
+  report = handler;
+}
+const guarded = (promise) =>
+  promise.then(
+    () => report(null),
+    (error) => report(error),
+  );
 
 // Neshranjeno besedilo; izplakne se pred menjavo zapisa, ob skritju strani in ob zaprtju.
 let pending = null; // { store, id, text, timer }
@@ -21,7 +35,7 @@ export async function flushPendingSave() {
   const { store, id, text, timer } = pending;
   pending = null;
   clearTimeout(timer);
-  await store.updateNoteText(id, text);
+  await guarded(store.updateNoteText(id, text));
 }
 
 // Zapis, ki ga brišemo, ne sme več dobiti shranjevanja iz čakalne vrste.
@@ -44,6 +58,7 @@ document.addEventListener(
 // Stanje pogleda: kar kretnja potrebuje sinhrono.
 const view = { t: null, store: null, client: null, notes: [], currentId: null, show: null };
 let host = null;
+let focusAfterRender = false;
 
 function underLayer(side) {
   return el("div", {
@@ -91,7 +106,15 @@ function getHost() {
 
 async function deleteCurrent() {
   const note = view.notes[currentIndex()];
-  if (!note || !confirm(view.t("deleteNoteConfirm").replace("{date}", note.date))) return;
+  if (!note) return;
+  // Datum sam ne pove, kateri zapis gre: pokaži tudi začetek besedila.
+  const preview =
+    [...note.text.replace(/\s+/g, " ").trim()].slice(0, 40).join("") || view.t("emptyNote");
+  const question = view
+    .t("deleteNoteConfirm")
+    .replace("{date}", note.date)
+    .replace("{preview}", preview);
+  if (!confirm(question)) return;
   discardPendingSave();
   await view.store.deleteNote(note.id);
   view.show();
@@ -102,12 +125,13 @@ function currentIndex() {
 }
 
 function openSide(side) {
+  endDateEdit({ apply: true });
   const index = currentIndex();
   const target = view.notes[index + (side === "past" ? -1 : 1)];
   if (target) {
     view.currentId = target.id;
     paint();
-    view.store.setCurrentNote(view.client.id, target.id);
+    guarded(view.store.setCurrentNote(view.client.id, target.id));
     return;
   }
   if (side !== "future") return;
@@ -116,7 +140,7 @@ function openSide(side) {
   view.notes = sortNotes([...view.notes, note]);
   view.currentId = note.id;
   paint({ focus: true });
-  view.store.commitNote(note);
+  guarded(view.store.commitNote(note));
 }
 
 function buildEditor(note) {
@@ -183,9 +207,31 @@ function paintUnder(layer, side, note) {
 // Dotik datuma ga zamenja z besedilnim poljem `YYYY-MM-DD HH:MM` (ne datetime-local: telefon bi v njem
 // pokazal uro po svojih nastavitvah). Veljaven vnos preuredi zapise in se shrani; neveljaven ostane v
 // polju z razlogom, Escape ga zavrže.
+let dateEdit = null; // odprto polje: { note, field, finished }
+
+function applyDate(note, date) {
+  if (date === note.date) return;
+  note.date = date;
+  view.notes = sortNotes(view.notes);
+  // Neshranjeno besedilo najprej: oba zapisa bereta in pišeta isto vrstico.
+  flushPendingSave().then(() => guarded(view.store.updateNoteDate(note.id, date)));
+}
+
+// Zapre odprto polje, preden karkoli zamenja ali odstrani njegov DOM (kretnja, menjava zapisa ali
+// zavihka). Brez tega polje ob odstranitvi sproži `blur` sredi `replaceChildren`, ki se zato prekine
+// in nov zapis ni nikoli shranjen. `apply`: veljaven vnos se obdrži, neveljaven se zavrže.
+function endDateEdit({ apply }) {
+  const edit = dateEdit;
+  if (!edit) return;
+  dateEdit = null;
+  edit.finished = true;
+  const date = apply ? parseDateTime(edit.field.value) : null;
+  if (date) applyDate(edit.note, date);
+}
+
 function editDate(head, dateButton, note) {
   const { t } = view;
-  let finished = false;
+  endDateEdit({ apply: true });
   const field = el("input", {
     cls: "note-date-input",
     attrs: {
@@ -199,6 +245,8 @@ function editDate(head, dateButton, note) {
   field.value = note.date;
   const error = el("span", { cls: "note-date-error", attrs: { role: "alert" } });
   error.hidden = true;
+  const edit = { note, field, finished: false };
+  dateEdit = edit;
   function commit() {
     const date = parseDateTime(field.value);
     if (!date) {
@@ -208,13 +256,7 @@ function editDate(head, dateButton, note) {
       error.hidden = false;
       return false;
     }
-    finished = true;
-    if (date !== note.date) {
-      note.date = date;
-      view.notes = sortNotes(view.notes);
-      // Neshranjeno besedilo najprej: oba zapisa bereta in pišeta isto vrstico.
-      flushPendingSave().then(() => view.store.updateNoteDate(note.id, date));
-    }
+    endDateEdit({ apply: true });
     paint();
     return true;
   }
@@ -223,15 +265,15 @@ function editDate(head, dateButton, note) {
       e.preventDefault();
       commit();
     } else if (e.key === "Escape") {
-      finished = true;
+      endDateEdit({ apply: false });
       paint();
     }
   });
   // Umik s polja: veljaven vnos se shrani, neveljaven se zavrže (telefon nima Escape).
   field.addEventListener("blur", () => {
-    if (finished) return;
+    if (edit.finished) return;
     if (!commit()) {
-      finished = true;
+      endDateEdit({ apply: false });
       paint();
     }
   });
@@ -242,6 +284,7 @@ function editDate(head, dateButton, note) {
 }
 
 function paint({ focus = false } = {}) {
+  endDateEdit({ apply: false });
   const { blanket, past, future } = getHost();
   const index = currentIndex();
   const note = view.notes[index];
@@ -265,6 +308,7 @@ function paint({ focus = false } = {}) {
 
 /** Izriše trenutni zapis stranke ali prazno stanje; `show` ponovno izriše pogled. */
 export async function renderNoteView(root, { t, store, client, show }) {
+  endDateEdit({ apply: true });
   await flushPendingSave();
   const notes = await store.listNotes(client.id);
   const note = await store.currentNote(client.id);
@@ -282,6 +326,7 @@ export async function renderNoteView(root, { t, store, client, show }) {
           on: {
             click: async () => {
               await store.addNote(client.id);
+              focusAfterRender = true; // prazen zapis je namenjen pisanju: tipkovnica naj se odpre
               show();
             },
           },
@@ -292,4 +337,7 @@ export async function renderNoteView(root, { t, store, client, show }) {
   }
   paint();
   root.replaceChildren(getHost().root);
+  // Fokus šele, ko je pogled v dokumentu: element zunaj dokumenta se ne da fokusirati.
+  if (focusAfterRender) root.querySelector(".plan-peek-blanket .md-input")?.focus();
+  focusAfterRender = false;
 }

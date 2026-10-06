@@ -21,3 +21,4 @@ Trener shrani kopijo vseh strank in zapisov v datoteko, ki je vedno šifrirana z
 | Dialog z geslom ponudi geslo iz šestih besed v celoti in se prilega zaslonu | [test_password_dialog.py](../tests/medium/test_password_dialog.py) |
 | Prazno geslo dialoga ne zapre | [test_password_dialog.py](../tests/medium/test_password_dialog.py) |
 | Google Drive ni del kopije | **Ni zgrajeno**: odločitev je odprta, glej TODO.md |
+| Zgrešeno geslo pri obnovi ne prepiše gesla naprave; novejša različica datoteke ima lasten razlog; »Pozabi geslo« vpraša | [backup.test.mjs](../tests/unit_js/data/backup.test.mjs), [test_backup.py](../tests/e2e/test_backup.py), [test_polish.py](../tests/e2e/test_polish.py) |

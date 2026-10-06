@@ -3,6 +3,7 @@
 // papir pa je edina pot, ko telefona ni več. Shrani se samo ključ (data/backupKeyStore.js).
 import {
   forgetBackupPassword,
+  hasBackupPassword,
   setBackupPassword,
   unlockWithPassword,
 } from "../data/backupKeyStore.js";
@@ -29,7 +30,7 @@ export function setupPasswordDialog({ t, keyStore }) {
     resolve?.(value);
   }
 
-  function show(unlocking) {
+  function show(unlocking, hasPassword = false) {
     $("pw-title").textContent = t(unlocking ? "pwUnlockTitle" : "pwTitle");
     $("pw-lead").textContent = t(unlocking ? "pwUnlockLead" : "pwLead");
     $("pw-label").textContent = t("pwLabel");
@@ -41,7 +42,8 @@ export function setupPasswordDialog({ t, keyStore }) {
     $("pw-confirm").textContent = t(unlocking ? "pwOpen" : "pwSave");
     // Pri odklepanju generiranje geslo bi zamenjalo geslo, s katerim je bila datoteka zapisana.
     for (const id of ["pw-generate", "pw-copy", "pw-warning"]) $(id).hidden = unlocking;
-    $("pw-remember-row").hidden = !unlocking;
+    // Ponudba se pojavi samo na napravi brez gesla: obstoječega se ne prepisuje.
+    $("pw-remember-row").hidden = !unlocking || hasPassword;
     $("pw-value").value = unlocking ? "" : generatePassphrase();
     status("");
     dialog.showModal();
@@ -67,10 +69,9 @@ export function setupPasswordDialog({ t, keyStore }) {
     if (!typed) return status("pwEmpty", true);
     try {
       if (envelope) {
-        const { key } = await unlockWithPassword(envelope, typed, keyStore, {
-          remember: $("pw-remember").checked,
-        });
-        settle(key);
+        // Samo izpelje ključ; shranjevanje je stvar obnovitve, ko je geslo dokazano pravo.
+        const unlocked = await unlockWithPassword(envelope, typed, keyStore);
+        settle({ ...unlocked, remember: $("pw-remember").checked });
       } else {
         await setBackupPassword(typed, keyStore);
         settle(true);
@@ -90,11 +91,12 @@ export function setupPasswordDialog({ t, keyStore }) {
       });
     },
     /** Resolves ključ iz gesla ali null. Pravilnost gesla pokaže šele dešifriranje. */
-    askToUnlock(file) {
+    async askToUnlock(file) {
+      const hasPassword = await hasBackupPassword(keyStore);
       return new Promise((resolve) => {
         pending = resolve;
         envelope = file;
-        show(true);
+        show(true, hasPassword);
       });
     },
     forget: () => forgetBackupPassword(keyStore),

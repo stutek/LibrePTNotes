@@ -42,7 +42,8 @@ export async function backupKeyForWriting(store) {
 }
 
 // Pot nove naprave: geslo, vpisano zdaj. Ključ se izpelje iz soli DATOTEKE, zato je enak tistemu, ki
-// jo je zapisal; `remember` ga obdrži na tej napravi.
+// jo je zapisal. `remember` ga takoj obdrži na tej napravi, zato ga sme uporabiti samo klicatelj, ki je
+// geslo že dokazal (backupFile.readBackup): nepreverjen vnos bi sicer prepisal pravo geslo.
 export async function unlockWithPassword(
   envelope,
   passphrase,

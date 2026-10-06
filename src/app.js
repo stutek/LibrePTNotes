@@ -8,7 +8,7 @@ import { renderAboutSection } from "./ui/aboutSection.js";
 import { renderBackupSection } from "./ui/backupSection.js";
 import { renderClientList } from "./ui/clientList.js";
 import { el } from "./ui/dom.js";
-import { flushPendingSave, renderNoteView } from "./ui/noteView.js";
+import { flushPendingSave, onSaveResult, renderNoteView } from "./ui/noteView.js";
 import { setupPasswordDialog } from "./ui/passwordDialog.js";
 import { renderTabs } from "./ui/tabs.js";
 import { watchForUpdate } from "./ui/updateBar.js";
@@ -80,7 +80,24 @@ function showStorageError() {
   );
 }
 
+// Neuspešno shranjevanje je trak nad pogledom, dokler se naslednji zapis ne posreči.
+function showSaveResult(error) {
+  const existing = document.getElementById("save-error");
+  if (!error) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const bar = el("div", {
+    cls: "save-error",
+    text: t("saveFailed"),
+    attrs: { id: "save-error", role: "alert" },
+  });
+  viewRoot.before(bar);
+}
+
 async function start() {
+  onSaveResult(showSaveResult);
   let backend;
   try {
     backend = idbBackend(await openDb());

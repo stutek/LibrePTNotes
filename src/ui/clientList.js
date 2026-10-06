@@ -11,6 +11,15 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
       placeholder: t("clientNameLabel"),
     },
   });
+  const error = el("p", {
+    cls: "form-error",
+    text: t("clientNameRequired"),
+    attrs: { role: "alert" },
+  });
+  error.hidden = true;
+  input.addEventListener("input", () => {
+    error.hidden = true;
+  });
   const form = el(
     "form",
     {
@@ -20,11 +29,13 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
           e.preventDefault();
           const name = input.value.trim();
           if (name) onAdd(name);
+          else error.hidden = false;
         },
       },
     },
     input,
     el("button", { cls: "primary", text: t("addClient"), attrs: { type: "submit" } }),
+    error,
   );
   const list = clients.length
     ? el(
@@ -46,7 +57,7 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
               el("button", {
                 cls: "open-notes primary",
                 text: t("openClientNotes"),
-                attrs: { type: "button" },
+                attrs: { type: "button", "aria-label": `${t("openClientNotes")}: ${c.name}` },
                 on: { click: () => onOpen(c.id) },
               }),
               el("button", {

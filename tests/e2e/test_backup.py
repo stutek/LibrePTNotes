@@ -141,7 +141,7 @@ def test_preklic_potrditve_ne_spremeni_podatkov(
 FOREIGN_FILES = [
     b"to ni json",
     b'{"clients": [], "notes": []}',
-    b'{"container": "aes-gcm", "ciphertext": "x", "formatVersion": 99}',
+    b'{"container": "aes-gcm", "ciphertext": "x", "formatVersion": 4}',
 ]
 
 
@@ -209,4 +209,58 @@ def test_spremenjena_datoteka_je_zavrnjena(
         "Napačno geslo ali spremenjena datoteka."
     )
     assert db_state(fresh)["clients"] == []
+    context.close()
+
+
+def test_zgresen_vnos_pri_obnovi_ne_prepise_gesla_naprave(backup, tmp_path, base_url):
+    # Najdba raziskovalnega testiranja: z obkljukanim »Zapomni si« je napačen vnos tiho zamenjal
+    # geslo, s katerim se pišejo kopije; datoteke nato ni bilo več mogoče odpreti z gesli trenerja.
+    page, _name, path = backup
+    other = tmp_path / "tuja.json"
+    context, foreign = fresh_profile(page.context.browser, {}, base_url)
+    seed(foreign, base_url, CLIENTS)
+    foreign.get_by_role("button", name="Shrani kopijo").click()
+    foreign.locator("#pw-value").fill("tuje-geslo")
+    with foreign.expect_download() as download:
+        foreign.locator("#pw-confirm").click()
+    download.value.save_as(other)
+    context.close()
+
+    restore(page, other)
+    page.wait_for_selector("#dialog-password[open]")
+    expect(page.locator("#pw-remember-row")).to_be_hidden()  # naprava že ima geslo
+    page.locator("#pw-value").fill("zgresen-vnos")
+    page.locator("#pw-confirm").click()
+    expect(page.locator(".backup .status")).to_contain_text("Napačno geslo")
+    page.reload()
+    name, again = save_backup_with_stored_password(page, tmp_path)
+    context2, third = fresh_profile(page.context.browser, {}, base_url)
+    restore(third, again)
+    unlock(third, PASSWORD)
+    expect(third.locator(".backup .status")).to_contain_text("Obnovljeno")
+    context2.close()
+
+
+def save_backup_with_stored_password(page, tmp_path):
+    """Shrani kopijo z geslom, ki ga naprava že ima (brez vprašanja)."""
+    with page.expect_download() as download:
+        page.get_by_role("button", name="Shrani kopijo").click()
+    path = tmp_path / "ponovna.json"
+    download.value.save_as(path)
+    return download.value.suggested_filename, path
+
+
+def test_nova_naprava_po_zgresenem_vnosu_ne_dobi_gesla(backup, base_url):
+    _page, _name, path = backup
+    context, fresh = fresh_profile(backup[0].context.browser, {}, base_url)
+    restore(fresh, path)
+    fresh.wait_for_selector("#dialog-password[open]")
+    expect(
+        fresh.locator("#pw-remember-row")
+    ).to_be_visible()  # prazna naprava: ponudba velja
+    fresh.locator("#pw-value").fill("napacno")
+    fresh.locator("#pw-confirm").click()
+    expect(fresh.locator(".backup .status")).to_contain_text("Napačno geslo")
+    fresh.reload()
+    expect(fresh.locator(".backup")).to_contain_text("ni nastavljeno")
     context.close()

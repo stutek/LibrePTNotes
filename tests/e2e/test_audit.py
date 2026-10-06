@@ -31,3 +31,26 @@ def test_aplikacija_zaprosi_trajno_shrambo(page, base_url):
     assert page.evaluate("window.__persistRequests") == 1, (
         "prošnja je ena, ne ena na izris"
     )
+
+
+def test_neuspelo_shranjevanje_se_vidi_in_ne_izgleda_shranjeno(page, base_url):
+    # Najdba raziskovalnega testiranja: ko brskalnik zapre ali izbriše bazo, medtem ko je aplikacija
+    # odprta, je tipkanje izgledalo shranjeno, po osvežitvi pa je bilo vse izgubljeno.
+    from app_helpers import seed
+
+    seed(
+        page,
+        base_url,
+        [{"name": "Ana", "notes": [{"date": "2026-10-01 09:00", "text": ""}]}],
+        tabs={"open": ["Ana"], "active": "Ana"},
+    )
+    page.wait_for_selector(".md-input")
+    expect(page.locator(".save-error")).to_have_count(0)
+    cdp = page.context.new_cdp_session(page)
+    cdp.send(
+        "Storage.clearDataForOrigin",
+        {"origin": base_url.split("/LibrePTNotes")[0], "storageTypes": "indexeddb"},
+    )
+    page.locator(".md-input").fill("to se ne bo shranilo")
+    expect(page.locator(".save-error")).to_be_visible()
+    expect(page.locator(".save-error")).to_contain_text("Shranjevanje ni uspelo")

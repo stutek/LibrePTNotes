@@ -5,6 +5,7 @@ import { el } from "./dom.js";
 
 const ERROR_TEXT = {
   "bad-file": "backupBadFile",
+  newer: "backupNewer",
   foreign: "backupBadFile",
   "wrong-password": "backupWrongPassword",
   "no-password": "backupNeedsPassword",
@@ -107,6 +108,7 @@ export async function renderBackupSection({
       }),
       hasPassword &&
         button("backupPasswordForget", async () => {
+          if (!confirm(t("backupPasswordForgetConfirm"))) return;
           await dialog.forget();
           onChange();
         }),

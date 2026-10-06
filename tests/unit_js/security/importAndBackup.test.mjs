@@ -74,7 +74,7 @@ test("zavrnjene datoteke ne spremenijo podatkov in ne pridejo do potrditve zamen
   const cases = {
     "ni json": ["to ni json", "bad-file"],
     "navaden json brez ovojnice": [JSON.stringify(good()), "bad-file"],
-    "nova različica oblike": [await sealed(good(), { formatVersion: 7 }), "bad-file"],
+    "nova različica oblike": [await sealed(good(), { formatVersion: 7 }), "newer"],
     "druga aplikacija": [await sealed(good({ app: "librept" })), "foreign"],
     "brez oznake aplikacije": [await sealed({ clients: [], notes: [] }), "foreign"],
     "zbirki nista seznama": [await sealed(good({ clients: "ne" })), "foreign"],
