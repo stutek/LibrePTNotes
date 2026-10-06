@@ -607,7 +607,8 @@ input.note-date-input.is-invalid:focus {
 }
 
 .storage-error,
-.save-error {
+.save-error,
+.conflict-error {
   margin: 12px;
   padding: 14px;
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
@@ -623,4 +624,50 @@ input.note-date-input.is-invalid:focus {
   color: var(--danger);
   font-size: 13px;
   font-weight: 600;
+}
+
+.conflict-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+/* Ležeči telefon: nad in pod zapisom je malo prostora, zato je gumb za brisanje v isti vrstici kot datum
+   (ne v svoji), namiga ni in vrstice so ožje. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .note-page {
+    position: relative;
+  }
+  .note-hint {
+    display: none;
+  }
+  .note-toolbar {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 12px;
+    z-index: 3;
+    padding: 0;
+  }
+  .note-head {
+    min-height: 44px;
+    padding-block: 0;
+    padding-inline-end: 160px;
+  }
+  .tabs {
+    padding-block: 2px;
+  }
+  .note-body {
+    margin-bottom: 4px;
+  }
+}
+
+/* Potrditveno polje (»Zapomni si«) je cilj za dotik, ne 13 px kvadratek. */
+.dialog input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  accent-color: var(--primary);
+}
+.dialog label.row {
+  min-height: 44px;
 }

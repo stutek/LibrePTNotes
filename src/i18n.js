@@ -46,6 +46,9 @@ const STRINGS = {
   pwSave: "Zapisal sem si geslo, shrani",
   pwOpen: "Odpri",
   pwCancel: "Zapri",
+  pwTooShort: "Geslo naj ima vsaj 8 znakov.",
+  pwWeak:
+    "Geslo je kratko, zato bi ga kdo lahko uganil. Tapni znova, če ga res želiš, ali pa vzemi predlagano.",
   pwEmpty: "Vpiši geslo.",
   pwFailed: "Gesla ni bilo mogoče shraniti.",
   pwChangeWarning: "Že shranjene datoteke ostanejo zaklenjene s starim geslom.",
@@ -62,6 +65,8 @@ const STRINGS = {
     "Shramba v brskalniku ni na voljo (zasebno okno ali onemogočena shramba), zato zapisov ni mogoče shraniti. Odpri aplikacijo v navadnem oknu.",
   saveFailed:
     "Shranjevanje ni uspelo: brskalnik ne dovoli pisanja v shrambo. Kar si vpisal, kopiraj drugam in znova naloži aplikacijo.",
+  conflictNotice:
+    "Ta zapis je bil spremenjen v drugem zavihku brskalnika. Osveži, sicer boš pisal čez njegovo besedilo.",
   noteHint: "Povleci vstran in nato navzgor: prejšnji, naslednji ali nov zapis",
   deleteNoteConfirm: "Izbrišem zapis {date} (»{preview}«)? Tega ni mogoče razveljaviti.",
   backupPasswordForgetConfirm:

@@ -134,6 +134,7 @@ def render_page(markdown_text, title, source_name="PRIVACY.md"):
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         f'<meta http-equiv="Content-Security-Policy" content="{PAGE_CSP}">\n'
         f"<title>{html.escape(page_title)}</title>\n"
+        '<link rel="stylesheet" href="./fonts/fonts.css">\n'
         '<link rel="stylesheet" href="./docs.css">\n'
         "</head>\n"
         "<body>\n"

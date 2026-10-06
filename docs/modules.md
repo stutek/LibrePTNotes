@@ -25,6 +25,7 @@ Vsak `.js`, `.css` in `.html` pod `src/` je tu z eno vrstico. Sloji uvozov (glej
 
 * [src/domain/dates.js](../src/domain/dates.js) — datum ISO in 24-urna ura, ročno brez `Intl`.
 * [src/domain/notes.js](../src/domain/notes.js) — vrstni red zapisov in sosednja zapisa.
+* [src/domain/names.js](../src/domain/names.js) — začetnica imena za avatar (prvi viden znak, ne kodna točka).
 * [src/domain/markdown.js](../src/domain/markdown.js) — razdelitev markdowna na odseke z razredom za barvanje.
 * [src/domain/buildInfo.js](../src/domain/buildInfo.js) — prikaz žiga gradnje.
 

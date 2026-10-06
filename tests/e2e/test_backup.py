@@ -220,7 +220,7 @@ def test_zgresen_vnos_pri_obnovi_ne_prepise_gesla_naprave(backup, tmp_path, base
     context, foreign = fresh_profile(page.context.browser, {}, base_url)
     seed(foreign, base_url, CLIENTS)
     foreign.get_by_role("button", name="Shrani kopijo").click()
-    foreign.locator("#pw-value").fill("tuje-geslo")
+    foreign.locator("#pw-value").fill("tuje-geslo-z-druge-naprave")
     with foreign.expect_download() as download:
         foreign.locator("#pw-confirm").click()
     download.value.save_as(other)

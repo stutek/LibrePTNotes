@@ -8,7 +8,7 @@ import { renderAboutSection } from "./ui/aboutSection.js";
 import { renderBackupSection } from "./ui/backupSection.js";
 import { renderClientList } from "./ui/clientList.js";
 import { el } from "./ui/dom.js";
-import { flushPendingSave, onSaveResult, renderNoteView } from "./ui/noteView.js";
+import { flushPendingSave, onForeignEdit, onSaveResult, renderNoteView } from "./ui/noteView.js";
 import { setupPasswordDialog } from "./ui/passwordDialog.js";
 import { renderTabs } from "./ui/tabs.js";
 import { watchForUpdate } from "./ui/updateBar.js";
@@ -17,6 +17,7 @@ const tabsRoot = document.getElementById("tabs");
 const viewRoot = document.getElementById("view");
 let store;
 let keyStore;
+let listScroll = 0; // drsenje seznama strank, da se po vrnitvi z zavihka ne vrne na vrh
 let dialog;
 
 async function render(status) {
@@ -70,6 +71,13 @@ async function render(status) {
       renderAboutSection({ t }),
     ],
   });
+  const page = viewRoot.querySelector(".page");
+  if (page) {
+    page.scrollTop = listScroll;
+    page.addEventListener("scroll", () => {
+      listScroll = page.scrollTop;
+    });
+  }
 }
 
 // Brez IndexedDB (zasebno okno, onemogočena shramba) aplikacija ne more shraniti ničesar: to je treba
@@ -96,8 +104,25 @@ function showSaveResult(error) {
   viewRoot.before(bar);
 }
 
+// Isti zapis je bil shranjen v drugem zavihku brskalnika: opozori, preden ga ta zavihek prepiše.
+function showConflict() {
+  if (document.getElementById("conflict-error")) return;
+  const bar = el(
+    "div",
+    { cls: "conflict-error", attrs: { id: "conflict-error", role: "alert" } },
+    el("span", { text: t("conflictNotice") }),
+    el("button", {
+      text: t("updateRefresh"),
+      attrs: { type: "button" },
+      on: { click: () => location.reload() },
+    }),
+  );
+  viewRoot.before(bar);
+}
+
 async function start() {
   onSaveResult(showSaveResult);
+  onForeignEdit(showConflict);
   let backend;
   try {
     backend = idbBackend(await openDb());

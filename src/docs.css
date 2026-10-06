@@ -2,32 +2,49 @@
    Barve sledijo temi telefona, kot aplikacija; lastnosti so lokalne za dokumente, ker ta list in
    app.css nista nikoli naložena skupaj. */
 :root {
-  --doc-bg: #ffffff;
-  --doc-text: #000000;
-  --doc-muted: #616161;
-  --doc-border: #d0d0d0;
-  --doc-link: #0000ff;
-  --doc-code-bg: #f3f3f3;
+  --doc-bg: #f6f7fb;
+  --doc-gradient: radial-gradient(
+      1000px 700px at 8% -10%,
+      rgba(16, 185, 129, 0.12),
+      transparent 60%
+    ), linear-gradient(180deg, #ffffff 0%, #eef2f9 100%);
+  --doc-text: #0f172a;
+  --doc-muted: #475569;
+  --doc-border: #e2e8f0;
+  --doc-link: #059669;
+  --doc-code-bg: rgba(15, 23, 42, 0.06);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --doc-bg: #1e1e1e;
-    --doc-text: #d4d4d4;
-    --doc-muted: #9d9d9d;
-    --doc-border: #3c3c3c;
-    --doc-link: #3794ff;
-    --doc-code-bg: #252526;
+    --doc-bg: #09090b;
+    --doc-gradient: radial-gradient(
+        1100px 720px at 12% -8%,
+        rgba(16, 185, 129, 0.16),
+        transparent 60%
+      ), radial-gradient(900px 640px at 108% 4%, rgba(34, 211, 238, 0.12), transparent 55%);
+    --doc-text: #fafafa;
+    --doc-muted: #a1a1aa;
+    --doc-border: #27272a;
+    --doc-link: #10b981;
+    --doc-code-bg: rgba(255, 255, 255, 0.08);
   }
 }
 
 html {
   background: var(--doc-bg);
+  background-image: var(--doc-gradient);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--doc-text);
-  font: 16px / 1.55 system-ui, sans-serif;
+  font: 16px / 1.55 "DM Sans", system-ui, sans-serif;
 }
 body {
   margin: 0;
-  background: var(--doc-bg);
+}
+.doc h1,
+.doc h2 {
+  font-family: "Outfit", "DM Sans", system-ui, sans-serif;
+  letter-spacing: -0.015em;
 }
 .doc {
   box-sizing: border-box;
@@ -57,12 +74,19 @@ body {
 .doc a,
 .doc-back a {
   color: var(--doc-link);
+  font-weight: 600;
+}
+/* Povezava nazaj je cilj za dotik: vsaj 44 px. */
+.doc-back a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .doc code {
   padding: 0 0.25em;
   border-radius: 3px;
   background: var(--doc-code-bg);
-  font: 0.9em ui-monospace, monospace;
+  font: 0.9em "JetBrains Mono", ui-monospace, monospace;
 }
 .doc table {
   border-collapse: collapse;

@@ -1,4 +1,5 @@
 // Seznam strank, dodajanje stranke in gumb »Odpri beležke stranke«.
+import { initialOf } from "../domain/names.js";
 import { el } from "./dom.js";
 
 export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, onDelete, extra }) {
@@ -11,6 +12,7 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
       placeholder: t("clientNameLabel"),
     },
   });
+  let adding = false;
   const error = el("p", {
     cls: "form-error",
     text: t("clientNameRequired"),
@@ -28,8 +30,16 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
         submit: (e) => {
           e.preventDefault();
           const name = input.value.trim();
-          if (name) onAdd(name);
-          else error.hidden = false;
+          if (!name) {
+            error.hidden = false;
+            return;
+          }
+          // Trije hitri dotiki so dali tri enake stranke: obrazec je prvi odgovor, ostali so odveč.
+          if (adding) return;
+          adding = true;
+          Promise.resolve(onAdd(name)).catch(() => {
+            adding = false;
+          });
         },
       },
     },
@@ -47,7 +57,7 @@ export function renderClientList(root, { t, clients, onAdd, onOpen, onRename, on
             { cls: "client-row" },
             el("span", {
               cls: "avatar",
-              text: [...c.name][0].toUpperCase(),
+              text: initialOf(c.name),
               attrs: { "aria-hidden": "true" },
             }),
             el("span", { cls: "client-name", text: c.name }),

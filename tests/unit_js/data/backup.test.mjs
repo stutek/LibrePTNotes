@@ -37,8 +37,8 @@ async function seeded(dev) {
 
 const never = async () => assert.fail("geslo se ne sme vprašati");
 
-test("geslo: generirano ima šest besed; brez gesla kopije ni", async () => {
-  assert.equal(generatePassphrase(webcrypto).split("-").length, 6);
+test("geslo: generirano geslo se izpiše v celoti; brez gesla kopije ni", async () => {
+  assert.equal(generatePassphrase(webcrypto).split("-").length, 7);
   const dev = device();
   assert.equal(await hasBackupPassword(dev.keyStore), false);
   await assert.rejects(

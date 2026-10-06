@@ -21,11 +21,31 @@ let report = () => {};
 export function onSaveResult(handler) {
   report = handler;
 }
+// Vrne true, če je zapis uspel.
 const guarded = (promise) =>
   promise.then(
-    () => report(null),
-    (error) => report(error),
+    () => {
+      report(null);
+      return true;
+    },
+    (error) => {
+      report(error);
+      return false;
+    },
   );
+
+// Isti zapis v dveh zavihkih brskalnika: zadnji bi tiho pisal čez prvega. Zavihek, ki zapis shrani,
+// to sporoči ostalim; tisti, ki ima isti zapis odprt, opozori. (Ime kanala nosi predpono libreptnotes-,
+// ker je izvor skupen z LibrePT.)
+const channel =
+  typeof BroadcastChannel === "function" ? new BroadcastChannel("libreptnotes-notes") : null;
+let onForeign = () => {};
+export function onForeignEdit(handler) {
+  onForeign = handler;
+}
+channel?.addEventListener("message", (event) => {
+  if (event.data?.noteId && event.data.noteId === view.currentId) onForeign();
+});
 
 // Neshranjeno besedilo; izplakne se pred menjavo zapisa, ob skritju strani in ob zaprtju.
 let pending = null; // { store, id, text, timer }
@@ -35,7 +55,7 @@ export async function flushPendingSave() {
   const { store, id, text, timer } = pending;
   pending = null;
   clearTimeout(timer);
-  await guarded(store.updateNoteText(id, text));
+  if (await guarded(store.updateNoteText(id, text))) channel?.postMessage({ noteId: id });
 }
 
 // Zapis, ki ga brišemo, ne sme več dobiti shranjevanja iz čakalne vrste.

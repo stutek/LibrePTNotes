@@ -14,10 +14,11 @@ LibrePTNotes je beležnica za osebne trenerje. Vse, kar vpišeš, ostane v brska
 * Imena strank in zapisi o njih (besedilo in datum).
 * Odprti zavihki in kateri je izbran.
 * Predpomnjene datoteke aplikacije, da deluje brez povezave.
+* Če si nastavil geslo za varnostno kopijo: iz njega izpeljan ključ, ki ga brskalnik ne pusti prebrati nazaj (ne geslo samo).
 
 ## Kje
 
-Podatki so v brskalnikovi shrambi IndexedDB (baza `libreptnotes`) na tvoji napravi. Aplikacija ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja ali analitike in ne nalaga zunanjih skript, pisav ali slik.
+Podatki so v brskalnikovi shrambi IndexedDB (baza `libreptnotes`) na tvoji napravi. Aplikacija prosi brskalnik, naj podatkov ne pobriše ob pomanjkanju prostora, in ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja ali analitike in ne nalaga zunanjih skript, pisav ali slik.
 
 ## Varnostna kopija
 

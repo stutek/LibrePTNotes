@@ -7,7 +7,7 @@ import {
   setBackupPassword,
   unlockWithPassword,
 } from "../data/backupKeyStore.js";
-import { generatePassphrase } from "../data/passphraseKey.js";
+import { generatePassphrase, passphraseProblem } from "../data/passphraseKey.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,6 +15,7 @@ export function setupPasswordDialog({ t, keyStore }) {
   const dialog = $("dialog-password");
   let pending = null; // resolve čakajočega klicatelja
   let envelope = null; // pri odklepanju: datoteka, katere sol da ključ
+  let warnedAbout = null; // kratko geslo, na katero je bilo trenerju že povedano
 
   function status(key, error = false) {
     const line = $("pw-status");
@@ -23,6 +24,7 @@ export function setupPasswordDialog({ t, keyStore }) {
   }
 
   function settle(value) {
+    warnedAbout = null;
     const resolve = pending;
     pending = null;
     envelope = null;
@@ -67,6 +69,16 @@ export function setupPasswordDialog({ t, keyStore }) {
   $("pw-confirm").addEventListener("click", async () => {
     const typed = $("pw-value").value.trim();
     if (!typed) return status("pwEmpty", true);
+    // Pri nastavljanju: prekratko geslo se zavrne, kratko opozori in se sprejme ob ponovnem potrdilu.
+    // Pri odklepanju geslo določa datoteka, zato ga ne ocenjujemo.
+    if (!envelope) {
+      const problem = passphraseProblem(typed);
+      if (problem === "short") return status("pwTooShort", true);
+      if (problem === "weak" && warnedAbout !== typed) {
+        warnedAbout = typed;
+        return status("pwWeak", true);
+      }
+    }
     try {
       if (envelope) {
         // Samo izpelje ključ; shranjevanje je stvar obnovitve, ko je geslo dokazano pravo.

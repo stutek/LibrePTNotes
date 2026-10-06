@@ -15,7 +15,7 @@ def dialog_page(page, base_url):
 
 def test_dialog_ponudi_geslo_iz_šestih_besed_v_celoti(dialog_page):
     value = dialog_page.locator("#pw-value").input_value()
-    assert len(value.split("-")) == 6
+    assert len(value.split("-")) == 7  # šest besed in naključen niz
     area = dialog_page.locator("#pw-value")
     assert area.evaluate("e => e.scrollHeight <= e.clientHeight")  # geslo ni odrezano
     assert dialog_page.locator("#pw-warning").is_visible()
@@ -61,3 +61,28 @@ def test_ciljne_površine_gumbov_so_dovolj_velike(dialog_page):
     for button in dialog_page.locator("#dialog-password button").all():
         box = button.bounding_box()
         assert box["height"] >= 44, button.inner_text()
+
+
+def test_prekratko_lastno_geslo_se_zavrne(dialog_page):
+    dialog_page.locator("#pw-value").fill("abc")
+    dialog_page.locator("#pw-confirm").click()
+    expect(dialog_page.locator("#pw-status")).to_contain_text("vsaj 8")
+    expect(dialog_page.locator("#dialog-password")).to_be_visible()
+
+
+def test_kratko_lastno_geslo_opozori_in_se_sprejme_ob_ponovnem_potrdilu(dialog_page):
+    dialog_page.locator("#pw-value").fill("kratko123")
+    dialog_page.locator("#pw-confirm").click()
+    expect(dialog_page.locator("#pw-status")).to_contain_text("kratko")
+    expect(dialog_page.locator("#dialog-password")).to_be_visible()
+    with dialog_page.expect_download():
+        dialog_page.locator("#pw-confirm").click()
+    expect(dialog_page.locator("#dialog-password")).to_be_hidden()
+
+
+def test_sprememba_besedila_po_opozorilu_opozori_znova(dialog_page):
+    dialog_page.locator("#pw-value").fill("kratko123")
+    dialog_page.locator("#pw-confirm").click()
+    dialog_page.locator("#pw-value").fill("drugo1234")
+    dialog_page.locator("#pw-confirm").click()
+    expect(dialog_page.locator("#dialog-password")).to_be_visible()

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
 <title>LibrePTNotes: zasebnost</title>
+<link rel="stylesheet" href="./fonts/fonts.css">
 <link rel="stylesheet" href="./docs.css">
 </head>
 <body>
@@ -16,9 +17,10 @@
 <li>Imena strank in zapisi o njih (besedilo in datum).</li>
 <li>Odprti zavihki in kateri je izbran.</li>
 <li>Predpomnjene datoteke aplikacije, da deluje brez povezave.</li>
+<li>Če si nastavil geslo za varnostno kopijo: iz njega izpeljan ključ, ki ga brskalnik ne pusti prebrati nazaj (ne geslo samo).</li>
 </ul>
 <h2>Kje</h2>
-<p>Podatki so v brskalnikovi shrambi IndexedDB (baza <code>libreptnotes</code>) na tvoji napravi. Aplikacija ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja ali analitike in ne nalaga zunanjih skript, pisav ali slik.</p>
+<p>Podatki so v brskalnikovi shrambi IndexedDB (baza <code>libreptnotes</code>) na tvoji napravi. Aplikacija prosi brskalnik, naj podatkov ne pobriše ob pomanjkanju prostora, in ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja ali analitike in ne nalaga zunanjih skript, pisav ali slik.</p>
 <h2>Varnostna kopija</h2>
 <p>Kopijo shraniš sam kot datoteko. Datoteka je vedno šifrirana z geslom, ki si ga določiš; brez gesla je ni mogoče prebrati in gesla ni mogoče obnoviti. Kam datoteko shraniš ali pošlješ, odločaš ti.</p>
 <h2>Brisanje</h2>
