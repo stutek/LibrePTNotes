@@ -90,12 +90,18 @@ def open_client(page, name):
 
 
 def wait_for_service_worker(page):
-    """Počaka, da service worker nadzira stran (predpomnilnik je poln, ker install uspe šele po tem)."""
+    """Počaka, da service worker nadzira stran (predpomnilnik je poln, ker install uspe šele po tem).
+    Brez omejitve bi zgrešen dogodek obesil test; z omejitvijo je neuspeh viden in poimenovan."""
     page.evaluate(
         """async () => {
-          await navigator.serviceWorker.ready;
+          const limit = (ms, what) =>
+            new Promise((_, no) => setTimeout(() => no(new Error(what + " ni v " + ms + " ms")), ms));
+          await Promise.race([navigator.serviceWorker.ready, limit(20000, "service worker ready")]);
           if (!navigator.serviceWorker.controller) {
-            await new Promise((r) => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true }));
+            await Promise.race([
+              new Promise((r) => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })),
+              limit(20000, "controllerchange"),
+            ]);
           }
         }"""
     )

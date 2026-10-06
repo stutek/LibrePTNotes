@@ -13,9 +13,11 @@ from app_helpers import (
 from playwright.sync_api import expect
 
 BAR = ".update-bar"
-CHECK_UPDATE = (
-    "async () => { await (await navigator.serviceWorker.getRegistration()).update(); }"
-)
+CHECK_UPDATE = """async () => {
+  const check = (await navigator.serviceWorker.getRegistration()).update();
+  const limit = new Promise((_, no) => setTimeout(() => no(new Error("update() ni v 20 s")), 20000));
+  await Promise.race([check, limit]);
+}"""
 
 
 def publish_new_version(site):
