@@ -56,6 +56,8 @@ const STRINGS = {
   deleteClientConfirm:
     "Izbrišem stranko {name} in vse njene zapise ({notes})? Tega ni mogoče razveljaviti.",
   deleteNote: "Izbriši zapis",
+  dateEditLabel: "Datum zapisa",
+  dateInvalid: "Datum mora biti v obliki 2026-10-05 14:30 (24-urna ura).",
   noteHint: "Zadrži in povleci vstran za sosednji zapis",
   deleteNoteConfirm: "Izbrišem zapis {date}? Tega ni mogoče razveljaviti.",
   updateAvailable: "Na voljo je nova različica",

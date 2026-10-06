@@ -1,7 +1,7 @@
 // Shramba LibrePTNotes: stranke, zapisi, odprti zavihki. Logika je neodvisna od IndexedDB; `backend`
 // (idbBackend.js v brskalniku, tests/memoryBackend.js v testih) zna samo getAll/get/put/delete/replaceAll.
 // Podatki ostanejo v brskalniku, nič ne gre na strežnik.
-import { formatDateTime } from "../domain/dates.js";
+import { formatDateTime, parseDateTime } from "../domain/dates.js";
 import { sortNotes } from "../domain/notes.js";
 
 const TABS_KEY = "tabs";
@@ -67,6 +67,16 @@ export function createStore(
     if (!notes.length) return null;
     const saved = await backend.get("meta", CURRENT_PREFIX + clientId);
     return notes.find((n) => n.id === saved?.noteId) || notes[notes.length - 1];
+  }
+
+  // Datum zapisa je urejljiv; `created` ostane, ker je čas nastanka, datum pa le vrstni red.
+  async function updateNoteDate(id, dateText) {
+    const date = parseDateTime(dateText);
+    if (!date) throw new Error("datum mora biti YYYY-MM-DD HH:MM");
+    const note = await backend.get("notes", id);
+    if (!note) throw new Error("zapis ne obstaja");
+    await backend.put("notes", { ...note, date });
+    return date;
   }
 
   // Zbriše stranko, vse njene zapise, zapomnjen trenutni zapis in zavihek.
@@ -193,6 +203,7 @@ export function createStore(
     draftNote,
     commitNote,
     updateNoteText,
+    updateNoteDate,
     listNotes,
     currentNote,
     setCurrentNote,

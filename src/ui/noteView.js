@@ -1,3 +1,4 @@
+import { parseDateTime } from "../domain/dates.js";
 import { sortNotes } from "../domain/notes.js";
 // Pogled zapisov ene stranke: trenutni zapis v urejevalniku z barvanjem markdowna in kretnja L
 // (gesture/planPeek.js, kopija iz LibrePT) za prejšnji/naslednji/nov zapis iste stranke.
@@ -179,20 +180,84 @@ function paintUnder(layer, side, note) {
   }
 }
 
+// Dotik datuma ga zamenja z besedilnim poljem `YYYY-MM-DD HH:MM` (ne datetime-local: telefon bi v njem
+// pokazal uro po svojih nastavitvah). Veljaven vnos preuredi zapise in se shrani; neveljaven ostane v
+// polju z razlogom, Escape ga zavrže.
+function editDate(head, dateButton, note) {
+  const { t } = view;
+  let finished = false;
+  const field = el("input", {
+    cls: "note-date-input",
+    attrs: {
+      type: "text",
+      inputmode: "numeric",
+      maxlength: "16",
+      autocomplete: "off",
+      "aria-label": t("dateEditLabel"),
+    },
+  });
+  field.value = note.date;
+  const error = el("span", { cls: "note-date-error", attrs: { role: "alert" } });
+  error.hidden = true;
+  function commit() {
+    const date = parseDateTime(field.value);
+    if (!date) {
+      field.classList.add("is-invalid");
+      field.setAttribute("aria-invalid", "true");
+      error.textContent = t("dateInvalid");
+      error.hidden = false;
+      return false;
+    }
+    finished = true;
+    if (date !== note.date) {
+      note.date = date;
+      view.notes = sortNotes(view.notes);
+      // Neshranjeno besedilo najprej: oba zapisa bereta in pišeta isto vrstico.
+      flushPendingSave().then(() => view.store.updateNoteDate(note.id, date));
+    }
+    paint();
+    return true;
+  }
+  field.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commit();
+    } else if (e.key === "Escape") {
+      finished = true;
+      paint();
+    }
+  });
+  // Umik s polja: veljaven vnos se shrani, neveljaven se zavrže (telefon nima Escape).
+  field.addEventListener("blur", () => {
+    if (finished) return;
+    if (!commit()) {
+      finished = true;
+      paint();
+    }
+  });
+  dateButton.replaceWith(field);
+  head.append(error);
+  field.focus();
+  field.select();
+}
+
 function paint({ focus = false } = {}) {
   const { blanket, past, future } = getHost();
   const index = currentIndex();
   const note = view.notes[index];
   const { wrap, input } = buildEditor(note);
-  blanket.replaceChildren(
-    el(
-      "div",
-      { cls: "note-head" },
-      el("span", { cls: "note-date", text: note.date }),
-      el("span", { cls: "note-count", text: `${index + 1} / ${view.notes.length}` }),
-    ),
-    el("div", { cls: "note-body" }, wrap),
+  const head = el("div", { cls: "note-head" });
+  const dateButton = el("button", {
+    cls: "note-date",
+    text: note.date,
+    attrs: { type: "button", "aria-label": `${view.t("dateEditLabel")}: ${note.date}` },
+    on: { click: () => editDate(head, dateButton, note) },
+  });
+  head.append(
+    dateButton,
+    el("span", { cls: "note-count", text: `${index + 1} / ${view.notes.length}` }),
   );
+  blanket.replaceChildren(head, el("div", { cls: "note-body" }, wrap));
   paintUnder(past, "past", view.notes[index - 1]);
   paintUnder(future, "future", view.notes[index + 1]);
   if (focus) input.focus();

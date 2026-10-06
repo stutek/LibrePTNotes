@@ -207,6 +207,45 @@ test("brisanje zapisa, ki ni trenutni, trenutnega ne premakne", async () => {
   await assert.rejects(() => store.deleteNote("ni"));
 });
 
+test("updateNoteDate: spremeni datum, created ostane, vrstni red se preuredi", async () => {
+  const { store, tick } = make();
+  const c = await store.addClient("Ana");
+  const first = await store.addNote(c.id, "a");
+  tick(10);
+  const second = await store.addNote(c.id, "b");
+  await store.updateNoteDate(second.id, "2026-01-02 08:15");
+  const notes = await store.listNotes(c.id);
+  assert.deepEqual(
+    notes.map((n) => n.id),
+    [second.id, first.id],
+  );
+  assert.equal(notes[0].date, "2026-01-02 08:15");
+  // persisted format: `created` is stored time of creation and must survive a date edit.
+  assert.equal(notes[0].created, second.created, "created se ne spreminja");
+  assert.equal(notes[0].text, "b");
+});
+
+test("updateNoteDate zavrne neveljaven datum in neobstoječ zapis, zapis ostane", async () => {
+  const { store } = make();
+  const c = await store.addClient("Ana");
+  const note = await store.addNote(c.id, "a");
+  await assert.rejects(() => store.updateNoteDate(note.id, "2026-10-05 25:00"));
+  await assert.rejects(() => store.updateNoteDate(note.id, "včeraj"));
+  await assert.rejects(() => store.updateNoteDate("ni", "2026-10-05 10:00"));
+  assert.equal((await store.listNotes(c.id))[0].date, note.date);
+});
+
+test("updateNoteDate ne spremeni trenutnega zapisa stranke", async () => {
+  const { store, tick } = make();
+  const c = await store.addClient("Ana");
+  const first = await store.addNote(c.id, "a");
+  tick();
+  await store.addNote(c.id, "b");
+  await store.setCurrentNote(c.id, first.id);
+  await store.updateNoteDate(first.id, "2030-01-01 00:00");
+  assert.equal((await store.currentNote(c.id)).id, first.id);
+});
+
 test("listNotes bere zapise prek indeksa clientId, ne vseh zapisov", async () => {
   const calls = [];
   const inner = (await import("../helpers/memoryBackend.mjs")).memoryBackend();
