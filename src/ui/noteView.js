@@ -167,7 +167,12 @@ function buildEditor(note) {
   const pre = el("pre", { cls: "md-highlight", attrs: { "aria-hidden": "true" } });
   const input = el("textarea", {
     cls: "md-input",
-    attrs: { "aria-label": view.t("noteLabel"), spellcheck: "false", autocapitalize: "sentences" },
+    attrs: {
+      "aria-label": view.t("noteLabel"),
+      placeholder: view.t("notePlaceholder"),
+      spellcheck: "false",
+      autocapitalize: "sentences",
+    },
   });
   input.value = note.text;
   paintHighlight(pre, note.text);
@@ -358,6 +363,10 @@ export async function renderNoteView(root, { t, store, client, show }) {
   paint();
   root.replaceChildren(getHost().root);
   // Fokus šele, ko je pogled v dokumentu: element zunaj dokumenta se ne da fokusirati.
-  if (focusAfterRender) root.querySelector(".plan-peek-blanket .md-input")?.focus();
+  // Z miško ali tipkovnico je urejevalnik takoj pripravljen; na dotik se tipkovnica ne odpre sama
+  // (trener zapis najprej bere), razen po gumbu »Nov zapis«.
+  if (focusAfterRender || matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    root.querySelector(".plan-peek-blanket .md-input")?.focus();
+  }
   focusAfterRender = false;
 }

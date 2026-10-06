@@ -38,6 +38,9 @@ async function render(status) {
     },
   });
   const active = clients.find((c) => c.id === tabs.active);
+  // Zapis je neprosoren blanket, ki se premika: preliv strani bi za njim pustil viden pravokotnik,
+  // zato je v pogledu zapisa ozadje enotno.
+  document.documentElement.classList.toggle("is-note-view", Boolean(active));
   if (active) {
     await renderNoteView(viewRoot, { t, store, client: active, show: render });
     return;

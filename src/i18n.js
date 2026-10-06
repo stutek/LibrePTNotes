@@ -67,6 +67,7 @@ const STRINGS = {
     "Shranjevanje ni uspelo: brskalnik ne dovoli pisanja v shrambo. Kar si vpisal, kopiraj drugam in znova naloži aplikacijo.",
   conflictNotice:
     "Ta zapis je bil spremenjen v drugem zavihku brskalnika. Osveži, sicer boš pisal čez njegovo besedilo.",
+  notePlaceholder: "Piši tukaj …",
   noteHint: "Povleci vstran in nato navzgor: prejšnji, naslednji ali nov zapis",
   deleteNoteConfirm: "Izbrišem zapis {date} (»{preview}«)? Tega ni mogoče razveljaviti.",
   backupPasswordForgetConfirm:
