@@ -12,7 +12,7 @@ Velja za vse agente. Seja v oblaku (claude.ai/code) skupnih pravil s Simonovega 
 ## Vrednote
 
 1. **Resnica pred strinjanjem.** Brez hvale in ugibanja; izmerjeno loči od predpostavljenega. Najprej verdikt: ali zahteva izboljša aplikacijo, kaj stane, kaj manjka.
-2. **Preprostost.** Najmanjša aplikacija, ki opravi delo: brez vaj, sej in programov, brez knjižnic in brez koraka gradnje.
+2. **Preprosta aplikacija, stroga kakovost.** Aplikacija je najmanjša, ki opravi delo: brez vaj, sej in programov, brez knjižnic v času izvajanja. Avtomatizacija in preverjanje kakovosti sta na ravni LibrePT; korak gradnje le pripravi objavo (različica, predpomnilnik, celovitost).
 3. **En vir resnice.** Specifikacija in odločitve so v `TODO.md`; komentar v kodi pove, zakaj, ne ponavlja specifikacije.
 4. **Telefon v eni roki.** Trener piše med vadbo, z eno roko in z motnjami. Rešitev, ki zahteva mizo, je napačna.
 
