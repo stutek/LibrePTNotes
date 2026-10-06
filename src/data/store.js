@@ -13,7 +13,7 @@ export function createStore(
   { now = () => new Date(), newId = () => crypto.randomUUID() } = {},
 ) {
   async function listNotes(clientId) {
-    return sortNotes((await backend.getAll("notes")).filter((n) => n.clientId === clientId));
+    return sortNotes(await backend.getAllByIndex("notes", "clientId", clientId));
   }
 
   async function addClient(name) {

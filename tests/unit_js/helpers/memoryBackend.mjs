@@ -8,6 +8,10 @@ export function memoryBackend() {
     async getAll(name) {
       return [...stores[name].values()].map(clone);
     },
+    // Kot IDBIndex.getAll: vrstice, katerih polje `index` je enako `key`.
+    async getAllByIndex(name, index, key) {
+      return [...stores[name].values()].filter((v) => v[index] === key).map(clone);
+    },
     async get(name, key) {
       const v = stores[name].get(key);
       return v === undefined ? undefined : clone(v);

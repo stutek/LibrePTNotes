@@ -206,3 +206,41 @@ test("brisanje zapisa, ki ni trenutni, trenutnega ne premakne", async () => {
   assert.equal((await store.currentNote(c.id)).id, b.id);
   await assert.rejects(() => store.deleteNote("ni"));
 });
+
+test("listNotes bere zapise prek indeksa clientId, ne vseh zapisov", async () => {
+  const calls = [];
+  const inner = (await import("../helpers/memoryBackend.mjs")).memoryBackend();
+  const backend = {
+    ...inner,
+    async getAll(name) {
+      calls.push(["getAll", name]);
+      return inner.getAll(name);
+    },
+    async getAllByIndex(name, index, key) {
+      calls.push(["getAllByIndex", name, index, key]);
+      return inner.getAllByIndex(name, index, key);
+    },
+  };
+  const store = createStore(backend, {
+    newId: (() => {
+      let i = 0;
+      return () => `i${++i}`;
+    })(),
+  });
+  const a = await store.addClient("Ana");
+  const b = await store.addClient("Bor");
+  await store.addNote(a.id, "a");
+  await store.addNote(b.id, "b");
+  calls.length = 0;
+  const notes = await store.listNotes(a.id);
+  assert.deepEqual(
+    notes.map((n) => n.text),
+    ["a"],
+  );
+  // is the contract: the requirement is that listNotes reads through the clientId index, never every note.
+  assert.deepEqual(
+    calls,
+    [["getAllByIndex", "notes", "clientId", a.id]],
+    "brez getAll nad vsemi zapisi",
+  );
+});

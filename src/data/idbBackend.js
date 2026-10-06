@@ -34,6 +34,8 @@ export function idbBackend(db) {
   const store = (name, mode = "readonly") => db.transaction(name, mode).objectStore(name);
   return {
     getAll: (name) => promisify(store(name).getAll()),
+    // Bere prek indeksa (zapisi po clientId), ne vseh vrstic in filtra v pomnilniku.
+    getAllByIndex: (name, index, key) => promisify(store(name).index(index).getAll(key)),
     get: (name, key) => promisify(store(name).get(key)),
     put: (name, value) => promisify(store(name, "readwrite").put(value)).then(() => {}),
     delete: (name, key) => promisify(store(name, "readwrite").delete(key)).then(() => {}),
