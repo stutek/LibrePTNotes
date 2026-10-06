@@ -755,6 +755,9 @@ def _run_browser_suite(directory, log_name, label, workers=None):
             # A hung test must fail by name, not hold the stage until the runner's 6 h limit
             # (run 19 of the Pages workflow did exactly that, with no output to say which test).
             "--timeout=90",
+            # The signal method cannot interrupt a worker stuck inside the Playwright driver; the
+            # thread method dumps every stack and kills the worker, so the hung test is named.
+            "--timeout-method=thread",
             directory,
         ],
         log_name,
