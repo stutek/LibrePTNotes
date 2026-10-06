@@ -8,3 +8,13 @@ export function el(tag, { cls, text, attrs, on } = {}, ...children) {
   node.append(...children.filter(Boolean));
   return node;
 }
+
+/** Prenese besedilo kot datoteko (Blob, ne zunanji strežnik). */
+export function downloadText(filename, text, type = "text/plain") {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = el("a", { attrs: { href: url, download: filename } });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

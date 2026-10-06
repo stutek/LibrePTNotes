@@ -25,10 +25,15 @@ def test_aplikacija_deluje_brez_kršitev_csp(page, base_url):
     )
     wait_for_service_worker(page)
     expect(page.locator(".plan-peek-blanket .md-input")).to_have_value("drugi")
-    page.get_by_role("button", name="Izbriši zapis").hover()
+    page.get_by_role("button", name="Več za zapis").hover()
     page.locator(".tab-name", has_text="Stranke").click()
     page.get_by_role("button", name="Shrani kopijo").click()
     page.wait_for_selector("#dialog-password[open]")
+    page.locator("#pw-cancel").click()
+    page.get_by_role(
+        "button", name="Več o podatkih"
+    ).click()  # spodnji list (dialog) je tudi pod CSP
+    expect(page.locator("dialog.sheet[open]")).to_be_visible()
     assert problems == []
 
 

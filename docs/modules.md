@@ -25,6 +25,7 @@ Vsak `.js`, `.css` in `.html` pod `src/` je tu z eno vrstico. Sloji uvozov (glej
 
 * [src/domain/dates.js](../src/domain/dates.js) — datum ISO in 24-urna ura, ročno brez `Intl`.
 * [src/domain/notes.js](../src/domain/notes.js) — vrstni red zapisov in sosednja zapisa.
+* [src/domain/exportText.js](../src/domain/exportText.js) — izvoz zapisov stranke v markdown, oznaka zapisa, varno ime datoteke.
 * [src/domain/names.js](../src/domain/names.js) — začetnica imena za avatar (prvi viden znak, ne kodna točka).
 * [src/domain/markdown.js](../src/domain/markdown.js) — razdelitev markdowna na odseke z razredom za barvanje.
 * [src/domain/buildInfo.js](../src/domain/buildInfo.js) — prikaz žiga gradnje.
@@ -44,6 +45,7 @@ Vsak `.js`, `.css` in `.html` pod `src/` je tu z eno vrstico. Sloji uvozov (glej
 * [src/ui/dom.js](../src/ui/dom.js) — najmanjši pomočnik za gradnjo DOM prek `textContent`.
 * [src/ui/tabs.js](../src/ui/tabs.js) — zavihki: seznam strank in odprte stranke.
 * [src/ui/clientList.js](../src/ui/clientList.js) — seznam strank, dodajanje in odpiranje beležk stranke.
+* [src/ui/menu.js](../src/ui/menu.js) — meni kot spodnji list za redka in nevarna dejanja stranke in zapisa.
 * [src/ui/noteView.js](../src/ui/noteView.js) — pogled zapisov stranke z urejevalnikom in kretnjo L.
 * [src/ui/highlight.js](../src/ui/highlight.js) — izris barvanega markdowna v `pre`.
 * [src/ui/backupSection.js](../src/ui/backupSection.js) — odsek varnostne kopije na seznamu strank.

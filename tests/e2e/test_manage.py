@@ -1,7 +1,7 @@
 """Preimenovanje in brisanje strank, brisanje zapisov (ena potrditev)."""
 
 import pytest
-from app_helpers import active_tab, db_state, seed
+from app_helpers import active_tab, client_menu, db_state, note_menu, seed
 from playwright.sync_api import expect
 
 NOTES = [
@@ -40,7 +40,7 @@ def row(page, name):
 
 def test_preimenovanje_stranke(two_clients):
     seen = answer(two_clients, True, "  Anja ")
-    row(two_clients, "Ana").get_by_role("button", name="Preimenuj").click()
+    client_menu(two_clients, "Ana", "Preimenuj")
     expect(row(two_clients, "Anja")).to_be_visible()
     assert seen[0][0] == "prompt"
     assert seen[0][2] == "Ana"  # privzeto staro ime
@@ -56,13 +56,13 @@ def test_preimenovanje_stranke(two_clients):
 @pytest.mark.parametrize("accept,text", [(False, None), (True, "   "), (True, "Ana")])
 def test_preimenovanje_ki_ne_spremeni_imena(two_clients, accept, text):
     answer(two_clients, accept, text)
-    row(two_clients, "Ana").get_by_role("button", name="Preimenuj").click()
+    client_menu(two_clients, "Ana", "Preimenuj")
     expect(two_clients.locator(".client-name")).to_have_text(["Ana", "Bor"])
 
 
 def test_brisanje_stranke_zbriše_zapise_zavihek_in_trenutni_zapis(two_clients):
     seen = answer(two_clients, True)
-    row(two_clients, "Ana").get_by_role("button", name="Izbriši").click()
+    client_menu(two_clients, "Ana", "Izbriši stranko")
     expect(two_clients.locator(".client-name")).to_have_text(["Bor"])
     assert seen[0][0] == "confirm"
     assert "Ana" in seen[0][1] and "(3)" in seen[0][1]
@@ -80,7 +80,7 @@ def test_brisanje_stranke_zbriše_zapise_zavihek_in_trenutni_zapis(two_clients):
 
 def test_brisanje_stranke_se_da_preklicati(two_clients):
     answer(two_clients, False)
-    row(two_clients, "Ana").get_by_role("button", name="Izbriši").click()
+    client_menu(two_clients, "Ana", "Izbriši stranko")
     expect(two_clients.locator(".client-name")).to_have_text(["Ana", "Bor"])
     assert len(db_state(two_clients)["notes"]) == 4
 
@@ -94,7 +94,7 @@ def test_brisanje_trenutnega_zapisa_odpre_prejšnjega(two_clients):
     open_ana(two_clients)
     expect(two_clients.locator(".plan-peek-blanket .md-input")).to_have_value("drugi")
     seen = answer(two_clients, True)
-    two_clients.get_by_role("button", name="Izbriši zapis").click()
+    note_menu(two_clients, "Izbriši zapis")
     expect(two_clients.locator(".plan-peek-blanket .md-input")).to_have_value("prvi")
     expect(two_clients.locator(".note-count")).to_have_text("1 / 2")
     assert "2026-10-02 09:00" in seen[0][1]
@@ -105,7 +105,7 @@ def test_brisanje_trenutnega_zapisa_odpre_prejšnjega(two_clients):
 def test_brisanje_zadnjega_zapisa_pokaže_prazno_stanje(two_clients):
     two_clients.locator(".tab-name", has_text="Bor").click()
     answer(two_clients, True)
-    two_clients.get_by_role("button", name="Izbriši zapis").click()
+    note_menu(two_clients, "Izbriši zapis")
     expect(two_clients.locator("#view .note-empty p")).to_have_text(
         "Ta stranka še nima zapisov."
     )
@@ -115,7 +115,7 @@ def test_brisanje_zadnjega_zapisa_pokaže_prazno_stanje(two_clients):
 def test_brisanje_zapisa_se_da_preklicati(two_clients):
     open_ana(two_clients)
     answer(two_clients, False)
-    two_clients.get_by_role("button", name="Izbriši zapis").click()
+    note_menu(two_clients, "Izbriši zapis")
     expect(two_clients.locator(".note-count")).to_have_text("2 / 3")
     assert len(db_state(two_clients)["notes"]) == 4
 
@@ -124,7 +124,7 @@ def test_neshranjeno_besedilo_izbrisanega_zapisa_ne_obuja_zapisa(two_clients):
     open_ana(two_clients)
     two_clients.locator(".plan-peek-blanket .md-input").fill("drugi, popravljen")
     answer(two_clients, True)
-    two_clients.get_by_role("button", name="Izbriši zapis").click()
+    note_menu(two_clients, "Izbriši zapis")
     expect(two_clients.locator(".plan-peek-blanket .md-input")).to_have_value("prvi")
     two_clients.locator(
         ".tab-name", has_text="Stranke"
@@ -134,9 +134,17 @@ def test_neshranjeno_besedilo_izbrisanega_zapisa_ne_obuja_zapisa(two_clients):
     assert texts == ["borov", "prvi", "tretji"]
 
 
-def test_gumb_za_brisanje_zapisa_je_zunaj_blanketa_kretnje(two_clients):
+def test_meni_zapisa_je_zunaj_blanketa_kretnje(two_clients):
+    # Gumb menija je v glavi zapisa, ki je znotraj blanketa; dotik nanj ne sme biti začetek kretnje L,
+    # meni sam pa je spodnji list čez celoten zaslon, ne del zapisa.
     open_ana(two_clients)
-    button = two_clients.get_by_role("button", name="Izbriši zapis").bounding_box()
-    blanket = two_clients.locator(".plan-peek-blanket").bounding_box()
-    assert button["y"] + button["height"] <= blanket["y"] + 1
-    assert button["height"] >= 44
+    button = two_clients.get_by_role("button", name="Več za zapis")
+    assert button.bounding_box()["height"] >= 44
+    button.click()
+    sheet = two_clients.locator("dialog.sheet[open]")
+    expect(sheet.get_by_role("button", name="Izbriši zapis")).to_be_visible()
+    box = sheet.bounding_box()
+    assert box["y"] + box["height"] <= 780 and box["x"] >= 0
+    sheet.get_by_role("button", name="Zapri").click()
+    expect(sheet).to_have_count(0)
+    assert len(db_state(two_clients)["notes"]) == 4

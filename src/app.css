@@ -267,8 +267,9 @@ input[type="text"]:focus {
 }
 .card,
 .add-client,
-.client-row,
-.backup {
+.backup,
+.notice,
+.welcome {
   margin-bottom: 12px;
   padding: 14px;
   border: 1px solid var(--card-border);
@@ -278,21 +279,133 @@ input[type="text"]:focus {
 }
 .add-client {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .add-client input {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Prvi zagon: eno veliko polje in en veliki gumb, nič drugega za odločanje. */
+.add-client.is-welcome {
+  flex-direction: column;
+  padding: 16px;
+}
+.add-client.is-welcome input,
+.add-client.is-welcome button {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+}
+.welcome {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 8px 4px 4px;
+}
+.welcome-logo {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  box-shadow: var(--box-shadow);
+}
+.welcome h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+}
+.welcome p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.notice {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.notice h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.notice p {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.notice .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--primary);
+  font-weight: 600;
 }
 .client-list {
-  margin: 0;
+  margin: 0 0 12px;
   padding: 0;
   list-style: none;
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
 }
 .client-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border-color);
+}
+.client-row:last-child {
+  border-bottom: 0;
+}
+/* Vsa vrstica je gumb: dotik odpre beležke (kot odpiranje pogovora v Gmailu). */
+.client-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 64px;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 8px 4px 8px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  font-weight: 400;
+}
+.client-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.client-meta {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chevron {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 24px;
+  line-height: 1;
+}
+.client-menu {
+  flex: 0 0 auto;
+  min-width: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 22px;
 }
 .avatar {
   display: inline-flex;
@@ -310,8 +423,6 @@ input[type="text"]:focus {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 .client-name {
-  flex: 1 1 0;
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -319,24 +430,20 @@ input[type="text"]:focus {
   font-size: 18px;
   font-weight: 600;
 }
-.client-actions {
-  display: flex;
-  flex: 1 0 100%;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.client-actions button {
-  flex: 1 1 0;
-}
-.client-actions .open-notes {
-  flex: 1 0 100%;
-}
 .empty {
   padding: 12px 4px;
   color: var(--text-muted);
 }
+.backup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.backup-head .client-menu {
+  margin-inline-end: -12px;
+}
 .backup h2 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 18px;
 }
 .backup p {
@@ -389,23 +496,6 @@ input[type="text"]:focus {
   display: flex;
   flex-direction: column;
 }
-.note-toolbar {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 2px 12px 6px;
-}
-.note-hint {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-.note-toolbar button {
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 13px;
-}
 .peek-host {
   position: relative;
   flex: 1 1 auto;
@@ -414,27 +504,65 @@ input[type="text"]:focus {
 }
 .note-head {
   flex: 0 0 auto;
-  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 12px 8px;
+}
+.note-head-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  padding: 4px 16px 8px;
 }
-.note-date {
-  min-width: 44px;
-  padding: 0 8px;
-  margin-inline-start: -8px;
-  border: 0;
-  background: transparent;
-  color: var(--text-main);
+/* Naslov je videti kot polje: okvir, velika pisava, napis namesto praznine. */
+.note-title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--font-header);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.015em;
-  /* črtkana črta pove, da se datum da urediti */
-  text-decoration: underline dashed color-mix(in srgb, var(--text-muted) 60%, transparent);
-  text-underline-offset: 5px;
+}
+.note-menu {
+  flex: 0 0 auto;
+  min-width: 44px;
+  padding: 0;
+  font-size: 22px;
+  color: var(--text-muted);
+}
+.note-date {
+  min-height: 36px;
+  min-width: 44px;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-weight: 700;
+}
+.note-date-edit {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.coach {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 8px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  border-radius: var(--border-radius-md);
+  background: var(--primary-light);
+  font-size: 14px;
+}
+.coach span {
+  flex: 1 1 auto;
+}
+.coach button {
+  flex: 0 0 auto;
 }
 .note-date-input {
   flex: 1 1 0;
@@ -641,26 +769,18 @@ input.note-date-input.is-invalid:focus {
   justify-content: space-between;
   gap: 8px;
 }
-/* Ležeči telefon: nad in pod zapisom je malo prostora, zato je gumb za brisanje v isti vrstici kot datum
-   (ne v svoji), namiga ni in vrstice so ožje. */
+/* Ležeči telefon: nad in pod zapisom je malo prostora, zato brez namiga, naslov in datum v eni vrstici. */
 @media (orientation: landscape) and (max-height: 520px) {
-  .note-page {
-    position: relative;
-  }
-  .note-hint {
+  .coach {
     display: none;
   }
-  .note-toolbar {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 12px;
-    z-index: 3;
-    padding: 0;
-  }
   .note-head {
-    min-height: 44px;
-    padding-block: 0;
-    padding-inline-end: 160px;
+    flex-direction: row;
+    align-items: center;
+    padding-block: 0 4px;
+  }
+  .note-head-row:first-child {
+    flex: 1 1 auto;
   }
   .tabs {
     padding-block: 2px;
@@ -668,6 +788,45 @@ input.note-date-input.is-invalid:focus {
   .note-body {
     margin-bottom: 4px;
   }
+}
+
+/* Meni kot spodnji list: redka in nevarna dejanja so v dosegu palca, a ne pod njim ves čas. */
+.sheet {
+  width: min(100vw, var(--app-max-width));
+  max-width: 100vw;
+  margin: auto auto 0;
+  padding: 8px 12px calc(12px + var(--safe-bottom));
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  background: var(--bg-color);
+  color: var(--text-main);
+  box-shadow: var(--box-shadow);
+}
+.sheet::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.sheet-title {
+  margin: 4px 4px 8px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-item {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+.sheet-cancel {
+  justify-content: center;
+  border-color: var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-main);
 }
 
 /* Potrditveno polje (»Zapomni si«) je cilj za dotik, ne 13 px kvadratek. */

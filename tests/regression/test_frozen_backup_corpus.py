@@ -92,7 +92,10 @@ def test_obnovitev_na_novem_profilu_vrne_vso_vsebino(page, base_url, name):
     )
     state = db_state(page)
     assert by_id(state["clients"]) == by_id(spec["clients"])
-    assert by_id(state["notes"]) == by_id(spec["notes"])
+    # Kopije, napisane pred naslovom zapisa, naslova nimajo: obnova jim da prazen naslov, vse drugo je enako.
+    assert by_id(state["notes"]) == by_id(
+        [{"title": "", **note} for note in spec["notes"]]
+    )
 
 
 @pytest.mark.parametrize("name", sorted(CORPUS))
@@ -112,4 +115,4 @@ def test_obnovljeno_je_vidno_in_odprto_v_urejevalniku(page, base_url, name):
     ).click()
     newest = [n for n in spec["notes"] if n["clientId"] == ana["id"]][-1]
     expect(page.locator(".plan-peek-blanket .md-input")).to_have_value(newest["text"])
-    expect(page.locator(".note-date")).to_have_text(newest["date"])
+    expect(page.locator(".note-date span").first).to_have_text(newest["date"])

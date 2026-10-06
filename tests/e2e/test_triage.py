@@ -12,8 +12,12 @@ def test_trojni_hitri_dotik_na_dodaj_ustvari_eno_stranko(page, base_url):
     page.locator(".add-client button[type=submit]").evaluate(
         "b => { b.click(); b.click(); b.click(); }"
     )
-    expect(page.locator(".client-name")).to_have_text(["Cene"])
+    expect(
+        page.locator(".plan-peek-blanket .md-input")
+    ).to_be_visible()  # prva stranka odpre zapis
     assert [c["name"] for c in db_state(page)["clients"]] == ["Cene"]
+    assert len(db_state(page)["notes"]) == 1
+    expect(page.locator(".tab-name")).to_have_text(["Stranke", "Cene"])
 
 
 def test_seznam_strank_obdrži_drsenje_po_vrnitvi_z_zavihka(page, base_url):

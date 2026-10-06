@@ -2,12 +2,14 @@
 
 import pytest
 from playwright.sync_api import expect
-from app_helpers import open_app
+from app_helpers import seed
 
 
 @pytest.fixture
 def dialog_page(page, base_url):
-    open_app(page, base_url)
+    seed(
+        page, base_url, [{"name": "Ana", "notes": []}]
+    )  # brez strank ni razdelka »Shrani kopijo«
     page.get_by_role("button", name="Shrani kopijo").click()
     page.wait_for_selector("#dialog-password[open]")
     return page

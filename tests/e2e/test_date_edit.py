@@ -34,7 +34,9 @@ def test_veljaven_datum_se_shrani_in_zapis_se_preuredi(note_page):
     expect(field).to_have_value("2026-10-02 09:00")
     field.fill("2026-10-04 12:30")
     field.press("Enter")
-    expect(note_page.locator(".note-date")).to_have_text("2026-10-04 12:30")
+    expect(note_page.locator(".note-date span:first-child")).to_have_text(
+        "2026-10-04 12:30"
+    )
     expect(note_page.locator(".note-count")).to_have_text("3 / 3")
     saved = stored(note_page, "drugi")
     assert saved["date"] == "2026-10-04 12:30"
@@ -42,7 +44,9 @@ def test_veljaven_datum_se_shrani_in_zapis_se_preuredi(note_page):
     assert saved["text"] == "drugi"
     # Zapis ostane trenutni: po ponovnem nalaganju je še vedno odprt.
     note_page.reload()
-    expect(note_page.locator(".note-date")).to_have_text("2026-10-04 12:30")
+    expect(note_page.locator(".note-date span:first-child")).to_have_text(
+        "2026-10-04 12:30"
+    )
 
 
 def test_neveljaven_datum_se_ne_shrani_in_pove_zakaj(note_page):
@@ -55,7 +59,9 @@ def test_neveljaven_datum_se_ne_shrani_in_pove_zakaj(note_page):
     assert stored(note_page, "drugi")["date"] == "2026-10-02 09:00"
     field.fill("2026-10-02 18:45")
     field.press("Enter")
-    expect(note_page.locator(".note-date")).to_have_text("2026-10-02 18:45")
+    expect(note_page.locator(".note-date span:first-child")).to_have_text(
+        "2026-10-02 18:45"
+    )
     assert stored(note_page, "drugi")["date"] == "2026-10-02 18:45"
 
 
@@ -64,7 +70,9 @@ def test_escape_zavrže_urejanje(note_page):
     field = note_page.locator(".note-date-input")
     field.fill("1999-01-01 00:00")
     field.press("Escape")
-    expect(note_page.locator(".note-date")).to_have_text("2026-10-02 09:00")
+    expect(note_page.locator(".note-date span:first-child")).to_have_text(
+        "2026-10-02 09:00"
+    )
     assert stored(note_page, "drugi")["date"] == "2026-10-02 09:00"
 
 
@@ -117,6 +125,8 @@ def test_kretnja_na_sosednji_zapis_zapre_polje_datuma(note_page):
     note_page.on("pageerror", lambda e: errors.append(str(e)))
     note_page.locator(".note-date").click()
     gesture_to(note_page, 150)
-    expect(note_page.locator(".note-date")).to_have_text("2026-10-01 09:00")
+    expect(note_page.locator(".note-date span:first-child")).to_have_text(
+        "2026-10-01 09:00"
+    )
     expect(note_page.locator(".note-date-input")).to_have_count(0)
     assert errors == []

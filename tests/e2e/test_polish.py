@@ -3,7 +3,7 @@
 import json
 
 import pytest
-from app_helpers import seed
+from app_helpers import data_menu, note_menu, open_client, seed
 from playwright.sync_api import expect
 
 NOTES = [
@@ -35,23 +35,21 @@ def test_polje_zapisa_je_vsaj_16_px_da_iphone_ne_poveča_strani(ana):
 
 
 def test_namig_o_kretnji_pove_tudi_navzgor_in_nov_zapis(ana):
-    hint = ana.locator(".note-hint").inner_text()
+    hint = ana.locator(".coach").inner_text()
     assert "navzgor" in hint and "nov" in hint
 
 
 def test_brisanje_zapisa_pokaže_začetek_besedila(ana):
     seen = []
     ana.once("dialog", lambda d: (seen.append(d.message), d.dismiss()))
-    ana.get_by_role("button", name="Izbriši zapis").click()
+    note_menu(ana, "Izbriši zapis")
     assert "Čučanje 3x5" in seen[0]
     assert "2026-10-01 09:00" in seen[0]
 
 
 def test_nov_zapis_iz_praznega_stanja_fokusira_polje(ana):
     ana.get_by_role("button", name="Stranke").first.click()
-    ana.locator(".client-row", has_text="Bor").get_by_role(
-        "button", name="Odpri"
-    ).click()
+    open_client(ana, "Bor")
     ana.get_by_role("button", name="Nov zapis").click()
     ana.wait_for_selector(".plan-peek-blanket .md-input")
     expect(ana.locator(".plan-peek-blanket .md-input")).to_be_focused()
@@ -71,7 +69,7 @@ def test_gumbi_vrstic_imajo_ime_stranke_za_bralnik_zaslona(ana):
 
 def test_prazno_ime_stranke_pove_zakaj_se_ne_doda(ana):
     ana.get_by_role("button", name="Stranke").first.click()
-    ana.get_by_role("button", name="Dodaj stranko").click()
+    ana.locator(".add-client button[type=submit]").click()
     expect(ana.locator(".form-error")).to_be_visible()
     ana.locator("#client-name").fill("Cene")
     expect(ana.locator(".form-error")).to_be_hidden()
@@ -79,12 +77,12 @@ def test_prazno_ime_stranke_pove_zakaj_se_ne_doda(ana):
 
 def test_pozabi_geslo_vpraša_in_ob_zavrnitvi_geslo_ostane(ana):
     ana.get_by_role("button", name="Stranke").first.click()
-    ana.get_by_role("button", name="Spremeni geslo").click()
+    data_menu(ana, "Spremeni geslo")
     ana.locator("#pw-confirm").click()
     ana.wait_for_selector("#dialog-password", state="hidden")
     asked = []
     ana.once("dialog", lambda d: (asked.append(d.message), d.dismiss()))
-    ana.get_by_role("button", name="Pozabi geslo").click()
+    data_menu(ana, "Pozabi geslo")
     assert asked, "brez vprašanja je geslo izginilo"
     expect(ana.locator(".backup")).to_contain_text("nastavljeno")
     expect(ana.locator(".backup")).not_to_contain_text("ni nastavljeno")

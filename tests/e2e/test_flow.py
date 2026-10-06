@@ -7,6 +7,7 @@ from app_helpers import (
     db_state,
     notes_of,
     open_app,
+    open_client,
     wait_for_saved,
     wait_for_service_worker,
 )
@@ -16,23 +17,37 @@ ISO = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
 
 
 def add_client(page, name):
+    """Doda stranko na seznamu (ne prve: ta odpre svoj zapis, glej add_first_client)."""
     page.locator("#client-name").fill(name)
-    page.get_by_role("button", name="Dodaj stranko").click()
+    page.locator(".add-client button[type=submit]").click()
     expect(page.locator(".client-name", has_text=name)).to_be_visible()
+
+
+def add_first_client(page, name):
+    """Prva stranka aplikacijo sama odpre v njenem zavihku, v pogledu zapisa."""
+    page.locator("#client-name").fill(name)
+    page.locator(".add-client button[type=submit]").click()
+    expect(page.locator(".plan-peek-blanket .md-input")).to_be_focused()
+    assert active_tab(page) == name
+
+
+def back_to_list(page):
+    page.locator(".tab-name", has_text="Stranke").click()
+    expect(page.locator("#view .client-list")).to_be_visible()
 
 
 def test_stranke_zavihek_zapisi(page, base_url):
     open_app(page, base_url)
     wait_for_service_worker(page)
-    expect(page.locator("#view .empty")).to_have_text("Še ni strank. Dodaj prvo.")
-    add_client(page, "Žan Kralj")
+    expect(page.locator("#view .welcome")).to_contain_text("Beležke za tvoje stranke")
+    assert page.locator("#view .client-row").count() == 0
+    add_first_client(page, "Žan Kralj")
+    back_to_list(page)
     add_client(page, "Ana Novak")
     # Slovenska abeceda: Ana pred Žanom.
     assert page.locator(".client-name").all_inner_texts() == ["Ana Novak", "Žan Kralj"]
 
-    page.locator(".client-row", has_text="Ana Novak").get_by_role(
-        "button", name="Odpri beležke stranke"
-    ).click()
+    open_client(page, "Ana Novak")
     expect(page.locator("#view .note-empty p")).to_have_text(
         "Ta stranka še nima zapisov."
     )
@@ -51,21 +66,23 @@ def test_stranke_zavihek_zapisi(page, base_url):
 def test_ime_stranke_ne_sme_biti_prazno(page, base_url):
     open_app(page, base_url)
     page.locator("#client-name").fill("   ")
-    page.get_by_role("button", name="Dodaj stranko").click()
-    expect(page.locator("#view .empty")).to_be_visible()
+    page.locator(".add-client button[type=submit]").click()
+    expect(page.locator(".form-error")).to_be_visible()
+    expect(page.locator("#view .welcome")).to_be_visible()
     assert db_state(page)["clients"] == []
 
 
 def test_stanje_ostane_po_ponovnem_nalaganju(page, base_url):
     open_app(page, base_url)
-    add_client(page, "Ana")
+    add_first_client(page, "Ana")
+    back_to_list(page)
     add_client(page, "Bor")
     for name in ("Ana", "Bor"):
-        page.locator(".tab-name", has_text="Stranke").click()
-        page.locator(".client-row", has_text=name).get_by_role(
-            "button", name="Odpri beležke stranke"
-        ).click()
-        page.get_by_role("button", name="Nov zapis").click()
+        back_to_list(page)
+        open_client(page, name)
+        page.wait_for_selector(".note-empty, .plan-peek-blanket .md-input")
+        if page.locator(".note-empty").count():  # Ana ima prvi zapis že od prve stranke
+            page.get_by_role("button", name="Nov zapis").click()
         page.locator(".plan-peek-blanket .md-input").fill(f"zapis {name}")
         wait_for_saved(page, name, [f"zapis {name}"])
     page.locator(".tab-name", has_text="Ana").click()
@@ -84,9 +101,7 @@ def test_stanje_ostane_po_ponovnem_nalaganju(page, base_url):
 
 def test_besedilo_se_shrani_tudi_ob_hitrem_zapiranju_strani(page, base_url):
     open_app(page, base_url)
-    add_client(page, "Ana")
-    page.get_by_role("button", name="Odpri beležke stranke").click()
-    page.get_by_role("button", name="Nov zapis").click()
+    add_first_client(page, "Ana")
     page.locator(".plan-peek-blanket .md-input").fill("hitro")
     page.locator(
         ".tab-name", has_text="Stranke"

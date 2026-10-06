@@ -145,7 +145,14 @@ test("ključi prototipa v uvoženi datoteki ne onesnažijo ničesar", async () =
   const [storedClient] = await dev.backend.getAll("clients");
   const [storedNote] = await dev.backend.getAll("notes");
   assert.deepEqual(Object.keys(storedClient).sort(), ["created", "id", "name"]);
-  assert.deepEqual(Object.keys(storedNote).sort(), ["clientId", "created", "date", "id", "text"]);
+  assert.deepEqual(Object.keys(storedNote).sort(), [
+    "clientId",
+    "created",
+    "date",
+    "id",
+    "text",
+    "title",
+  ]);
   assert.equal(Object.getPrototypeOf(storedNote), Object.prototype);
   assert.equal(storedNote.isAdmin, undefined);
 });

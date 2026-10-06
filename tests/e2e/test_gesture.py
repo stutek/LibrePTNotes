@@ -154,7 +154,7 @@ def test_najnovejši_zapis_ponudi_nov_zapis_in_ga_odpre_s_trenutnim_datumom(
     touch.raise_(80)
     expect(page.locator(".note-count")).to_have_text("4 / 4")
     after = page.evaluate(now_js)
-    assert page.locator(".note-date").inner_text() in (before, after)
+    assert page.locator(".note-date span:first-child").inner_text() in (before, after)
     assert current_text(page) == ""
     assert page.evaluate("() => document.activeElement?.classList.contains('md-input')")
     touch.up()

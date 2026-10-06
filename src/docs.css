@@ -104,3 +104,18 @@ body {
   margin: 0 auto;
   padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px));
 }
+.doc h3 {
+  margin: 1.2rem 0 0.3rem;
+  font-family: "Outfit", "DM Sans", system-ui, sans-serif;
+  font-size: 1rem;
+}
+.doc blockquote {
+  margin: 0.6rem 0;
+  padding: 0.4rem 0.9rem;
+  border-inline-start: 4px solid var(--doc-link);
+  border-radius: 4px;
+  background: var(--doc-code-bg);
+}
+.doc blockquote p {
+  margin: 0.3rem 0;
+}

@@ -6,6 +6,7 @@ import { sortNotes } from "../domain/notes.js";
 
 const TABS_KEY = "tabs";
 const CURRENT_PREFIX = "current:";
+const HINTS_KEY = "hints";
 const COLLATOR = new Intl.Collator("sl");
 
 export function createStore(
@@ -44,7 +45,14 @@ export function createStore(
   // pozneje (commitNote). Nov zapis je takoj trenutni: kretnja L ga odpre s trenutnim datumom.
   function draftNote(clientId, text = "") {
     const date = now();
-    return { id: newId(), clientId, date: formatDateTime(date), created: date.getTime(), text };
+    return {
+      id: newId(),
+      clientId,
+      date: formatDateTime(date),
+      created: date.getTime(),
+      title: "",
+      text,
+    };
   }
 
   async function commitNote(note) {
@@ -59,6 +67,47 @@ export function createStore(
     const note = await backend.get("notes", id);
     if (!note) throw new Error("zapis ne obstaja");
     await backend.put("notes", { ...note, text });
+  }
+
+  // Posodobi naslov in/ali besedilo zapisa; samo ta dva polja (datum ima svojo funkcijo, ker ga preverja).
+  async function updateNoteFields(id, patch) {
+    const allowed = new Set(["title", "text"]);
+    if (Object.keys(patch).some((k) => !allowed.has(k))) throw new Error("neznano polje zapisa");
+    const note = await backend.get("notes", id);
+    if (!note) throw new Error("zapis ne obstaja");
+    const next = { ...note };
+    if ("title" in patch) next.title = String(patch.title ?? "").trim();
+    if ("text" in patch) next.text = String(patch.text ?? "");
+    await backend.put("notes", next);
+  }
+
+  // Število zapisov in datum zadnjega po strankah, za seznam strank. En prebran seznam zapisov.
+  async function clientSummaries() {
+    const out = {};
+    for (const c of await backend.getAll("clients")) out[c.id] = { count: 0, last: "" };
+    for (const n of await backend.getAll("notes")) {
+      const row = out[n.clientId];
+      if (!row) continue;
+      row.count += 1;
+      if (n.date > row.last) row.last = n.date;
+    }
+    return out;
+  }
+
+  // Namigi in obvestila, ki se pokažejo enkrat (kretnja, zasebnost): zapomnjeni v meta.
+  async function hintDone(name) {
+    return Boolean((await backend.get("meta", HINTS_KEY))?.done?.[name]);
+  }
+
+  async function markHintDone(name) {
+    const saved = await backend.get("meta", HINTS_KEY);
+    await backend.put("meta", { key: HINTS_KEY, done: { ...saved?.done, [name]: true } });
+  }
+
+  // Pravica do izbrisa: vse na tej napravi, tudi ključ kopije in namigi. Kopij, ki jih je trener
+  // shranil, to ne doseže.
+  async function deleteAllData() {
+    await backend.replaceAll({ clients: [], notes: [], meta: [] });
   }
 
   // Zapomnjen zapis, sicer najnovejši; null, če stranka nima zapisov.
@@ -157,7 +206,8 @@ export function createStore(
         typeof n?.id !== "string" ||
         !ids.has(n.clientId) ||
         typeof n.date !== "string" ||
-        typeof n.text !== "string"
+        typeof n.text !== "string" ||
+        (n.title !== undefined && typeof n.title !== "string")
       ) {
         throw new Error("neveljaven zapis");
       }
@@ -187,6 +237,7 @@ export function createStore(
         clientId: n.clientId,
         date: n.date,
         created: created(n.created),
+        title: (n.title ?? "").trim(),
         text: n.text,
       })),
       meta,
@@ -204,6 +255,11 @@ export function createStore(
     commitNote,
     updateNoteText,
     updateNoteDate,
+    updateNoteFields,
+    clientSummaries,
+    hintDone,
+    markHintDone,
+    deleteAllData,
     listNotes,
     currentNote,
     setCurrentNote,

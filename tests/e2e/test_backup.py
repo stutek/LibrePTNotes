@@ -261,6 +261,7 @@ def test_nova_naprava_po_zgresenem_vnosu_ne_dobi_gesla(backup, base_url):
     fresh.locator("#pw-value").fill("napacno")
     fresh.locator("#pw-confirm").click()
     expect(fresh.locator(".backup .status")).to_contain_text("Napačno geslo")
-    fresh.reload()
+    # Prazna naprava kaže skrčen razdelek brez stanja gesla: stranka ga pokaže.
+    seed(fresh, base_url, [{"name": "Ana", "notes": []}])
     expect(fresh.locator(".backup")).to_contain_text("ni nastavljeno")
     context.close()

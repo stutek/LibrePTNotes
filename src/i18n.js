@@ -2,7 +2,6 @@
 const STRINGS = {
   appTitle: "LibrePTNotes",
   clientsTab: "Stranke",
-  noClients: "Še ni strank. Dodaj prvo.",
   clientNameLabel: "Ime stranke",
   addClient: "Dodaj stranko",
   openClientNotes: "Odpri beležke stranke",
@@ -21,8 +20,9 @@ const STRINGS = {
   backupTitle: "Varnostna kopija",
   backupSave: "Shrani kopijo",
   backupRestore: "Obnovi iz datoteke",
-  backupPasswordSet: "Geslo kopije: nastavljeno",
-  backupPasswordUnset: "Geslo kopije: ni nastavljeno",
+  backupPasswordSet: "Geslo kopije: nastavljeno. Kopija je vedno šifrirana.",
+  backupPasswordUnset:
+    "Geslo kopije: ni nastavljeno. Kopija je vedno šifrirana; geslo določiš ob prvem shranjevanju.",
   backupPasswordChange: "Spremeni geslo",
   backupPasswordForget: "Pozabi geslo na tej napravi",
   backupSaved: "Kopija shranjena.",
@@ -55,9 +55,9 @@ const STRINGS = {
   pwRemember: "Zapomni si na tej napravi",
   renameClient: "Preimenuj",
   renameClientPrompt: "Novo ime stranke",
-  deleteClient: "Izbriši",
+  deleteClientItem: "Izbriši stranko",
   deleteClientConfirm:
-    "Izbrišem stranko {name} in vse njene zapise ({notes})? Tega ni mogoče razveljaviti.",
+    "Izbrišem stranko {name} in vse njene zapise ({notes})? Tega ni mogoče razveljaviti. Kopije, ki si jih že shranil, ostanejo, kjer so.",
   deleteNote: "Izbriši zapis",
   dateEditLabel: "Datum zapisa",
   dateInvalid: "Datum mora biti v obliki 2026-10-05 14:30 (24-urna ura).",
@@ -68,7 +68,6 @@ const STRINGS = {
   conflictNotice:
     "Ta zapis je bil spremenjen v drugem zavihku brskalnika. Osveži, sicer boš pisal čez njegovo besedilo.",
   notePlaceholder: "Piši tukaj …",
-  noteHint: "Povleci vstran in nato navzgor: prejšnji, naslednji ali nov zapis",
   deleteNoteConfirm: "Izbrišem zapis {date} (»{preview}«)? Tega ni mogoče razveljaviti.",
   backupPasswordForgetConfirm:
     "Pozabim geslo na tej napravi? Kopij ne boš mogel shraniti, dokler ga ne nastaviš znova.",
@@ -78,7 +77,40 @@ const STRINGS = {
   updateAvailable: "Na voljo je nova različica",
   updateRefresh: "Osveži",
   versionLabel: "Različica",
-  privacyLink: "Zasebnost",
+  privacyLink: "Zasebnost in GDPR",
+  welcomeTitle: "Beležke za tvoje stranke",
+  welcomeLead:
+    "Za vsako stranko pišeš zapise kot v beležki: načrt, trening, opomba za prihodnjič. Vse ostane na tem telefonu.",
+  addFirstClient: "Dodaj prvo stranko",
+  addClientShort: "Dodaj",
+  clientNameFirst: "Ime stranke, na primer Ana Novak",
+  clientNamePlaceholder: "Ime nove stranke",
+  clientMetaNone: "Še brez zapisov",
+  clientMeta: "Zapisi: {count} · zadnji {last}",
+  clientMenu: "Več za stranko",
+  clientExport: "Izvozi zapise (besedilo)",
+  exportConfirm:
+    "Izvoz je navadno, nešifrirano besedilo z vsemi zapisi stranke {name}. Hrani ga varno in ga pošlji samo stranki ali varovani shrambi. Nadaljujem?",
+  menuClose: "Zapri",
+  dataMenu: "Več o podatkih",
+  deleteAllData: "Izbriši vse podatke na tej napravi",
+  deleteAllConfirm:
+    "Izbrišem VSE stranke, zapise in nastavitve na tej napravi? Že shranjenih kopij to ne doseže. Tega ni mogoče razveljaviti.",
+  deleteAllConfirm2: "Res izbrišem vse? To je zadnja možnost, da prekličeš.",
+  dataDeleted: "Vsi podatki na tej napravi so izbrisani.",
+  privacyNoticeTitle: "Tvoje stranke, tvoja odgovornost",
+  privacyNoticeBody:
+    "Zapisi so samo na tem telefonu. Po GDPR si za podatke svojih strank odgovoren ti: obvesti jih, beleži le potrebno in zdravstvene podatke samo z njihovo privolitvijo.",
+  restoreHint: "Že imaš kopijo z drugega telefona?",
+  privacyReadMore: "Preberi več",
+  privacyAck: "Razumem",
+  noteTitlePlaceholder: "Naslov (neobvezno)",
+  noteTitleLabel: "Naslov zapisa",
+  noteMenu: "Več za zapis",
+  dateEditHint: "uredi",
+  coachGesture:
+    "Namig: povleci prst vstran in nato navzgor, da odpreš prejšnji, naslednji ali nov zapis.",
+  coachDone: "Razumem",
 };
 
 export function t(key) {

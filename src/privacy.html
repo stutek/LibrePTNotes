@@ -4,29 +4,53 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
-<title>LibrePTNotes: zasebnost</title>
+<title>LibrePTNotes: zasebnost in GDPR za trenerja</title>
 <link rel="stylesheet" href="./fonts/fonts.css">
 <link rel="stylesheet" href="./docs.css">
 </head>
 <body>
 <main class="doc">
-<h1>LibrePTNotes: zasebnost</h1>
-<p>LibrePTNotes je beležnica za osebne trenerje. Vse, kar vpišeš, ostane v brskalniku tvojega telefona.</p>
+<h1>LibrePTNotes: zasebnost in GDPR za trenerja</h1>
+<p>LibrePTNotes je beležnica za osebne trenerje. Vse, kar vpišeš, ostane v brskalniku tvojega telefona. Avtor aplikacije do tvojih podatkov nima dostopa in jih nikoli ne prejme.</p>
 <h2>Kaj se shrani</h2>
 <ul>
-<li>Imena strank in zapisi o njih (besedilo in datum).</li>
-<li>Odprti zavihki in kateri je izbran.</li>
-<li>Predpomnjene datoteke aplikacije, da deluje brez povezave.</li>
+<li>Imena strank in zapisi o njih (naslov, besedilo, datum).</li>
+<li>Odprti zavihki in kateri je izbran, ter kateri enkratni namigi so že prikazani.</li>
 <li>Če si nastavil geslo za varnostno kopijo: iz njega izpeljan ključ, ki ga brskalnik ne pusti prebrati nazaj (ne geslo samo).</li>
+<li>Predpomnjene datoteke aplikacije, da deluje brez povezave.</li>
 </ul>
 <h2>Kje</h2>
-<p>Podatki so v brskalnikovi shrambi IndexedDB (baza <code>libreptnotes</code>) na tvoji napravi. Aplikacija prosi brskalnik, naj podatkov ne pobriše ob pomanjkanju prostora, in ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja ali analitike in ne nalaga zunanjih skript, pisav ali slik.</p>
-<h2>Varnostna kopija</h2>
-<p>Kopijo shraniš sam kot datoteko. Datoteka je vedno šifrirana z geslom, ki si ga določiš; brez gesla je ni mogoče prebrati in gesla ni mogoče obnoviti. Kam datoteko shraniš ali pošlješ, odločaš ti.</p>
-<h2>Brisanje</h2>
-<p>Podatke izbrišeš tako, da v brskalniku počistiš podatke strani ali odstraniš nameščeno aplikacijo. Brez varnostne kopije jih nihče ne more vrniti.</p>
-<h2>Stranke</h2>
-<p>Zapisi o strankah so osebni podatki tvojih strank. Ker ostanejo na tvoji napravi, si zanje odgovoren sam: zavaruj telefon in varnostne kopije ter stranke obvesti, kaj o njih beležiš.</p>
+<p>Podatki so v brskalnikovi shrambi IndexedDB (baza <code>libreptnotes</code>) na tvoji napravi. Aplikacija prosi brskalnik, naj podatkov ne pobriše ob pomanjkanju prostora, in ne pošilja ničesar na strežnik, nima uporabniških računov, sledenja, analitike ali piškotkov in ne nalaga zunanjih skript, pisav ali slik.</p>
+<h2>Kdo je odgovoren za podatke strank</h2>
+<p><strong>Ti.</strong> Zapisi o strankah so osebni podatki, ti pa si njihov upravljavec po splošni uredbi o varstvu podatkov (GDPR). Ker podatki ostanejo na tvoji napravi, LibrePTNotes ni obdelovalec in jih ne more varovati namesto tebe. Spodaj je, kaj to pomeni v praksi. To ni pravni nasvet; pri dvomih se obrni na pravnika ali na <a href="https://www.ip-rs.si">Informacijskega pooblaščenca</a>.</p>
+<h3>1. Beleži le, kar potrebuješ</h3>
+<p>Zapisuj podatke, ki jih res rabiš za delo s stranko (cilji, načrt, izvedba, opombe). Ne zapisuj več, kot je potrebno.</p>
+<h3>2. Zdravstveni podatki so posebna vrsta podatkov</h3>
+<p>Poškodbe, bolezni, zdravila, nosečnost in podobno so po 9. členu GDPR posebna vrsta osebnih podatkov. Zapisuj jih samo z izrecno privolitvijo stranke ali kadar jih stranka sama sporoči za namen vadbe in se s tem strinja; hrani jih čim krajši čas in jih posebej zavaruj.</p>
+<h3>3. Stranko obvesti</h3>
+<p>Pred beleženjem ji povej (13. člen GDPR), kdo je upravljavec (ti), kaj beležiš in zakaj, kako dolgo hraniš, komu daš podatke (praviloma nikomur) in kakšne so njene pravice. Primer besedila, ki ga prilagodi sebi:</p>
+<blockquote>
+<p>Za načrtovanje vadbe si beležim tvoje ime, cilje, opombe o treningih in, če mi jih zaupaš, podatke o poškodbah. Podatki so le na mojem telefonu, jih ne dajem drugim in jih hranim, dokler sodelujeva, in še do 1 leto po koncu. Kadar koli lahko zahtevaš vpogled, popravek ali izbris. Piši mi na (tvoj naslov).</p>
+</blockquote>
+<h3>4. Pravice stranke</h3>
+<ul>
+<li><strong>Vpogled in prenos:</strong> v meniju stranke (⋯) izberi »Izvozi zapise (besedilo)«. Dobiš navadno besedilno datoteko, ki je NI šifrirana: pošlji jo samo stranki, po varnem kanalu.</li>
+<li><strong>Izbris:</strong> v meniju stranke izberi »Izbriši stranko«. Izbriše stranko in vse njene zapise s tega telefona. Varnostne kopije, ki si jih že shranil, ostanejo, kjer so; izbriši jih tudi tam.</li>
+<li><strong>Popravek:</strong> popraviš zapis neposredno.</li>
+</ul>
+<h3>5. Varnost</h3>
+<ul>
+<li>Telefon zaščiti z zaklepom in ga posodabljaj.</li>
+<li>Varnostna kopija je vedno šifrirana z geslom; geslo zapiši na papir, ne na isti telefon. Brez gesla kopije ni mogoče odpreti in gesla ni mogoče obnoviti.</li>
+<li>Izvoženih besedil ne puščaj v odložišču, v pošti ali v oblaku brez zaščite.</li>
+<li>Če telefon izgubiš ali ti ga ukradejo, so zapisi odvisni od zaklepa naprave.</li>
+</ul>
+<h3>6. Kršitev varnosti</h3>
+<p>Če izgubiš napravo ali kopijo s podatki strank in obstaja tveganje za njihove pravice (zlasti pri zdravstvenih podatkih), lahko to pomeni kršitev varstva osebnih podatkov. Po 33. členu GDPR jo je treba brez nepotrebnega odlašanja, če je mogoče v 72 urah, prijaviti Informacijskemu pooblaščencu, stranke pa obvestiti, če je tveganje visoko.</p>
+<h3>7. Rok hranjenja</h3>
+<p>Določi rok in ga spoštuj. Ko sodelovanje preneha in roka ni več, stranko izbriši.</p>
+<h2>Brisanje vsega</h2>
+<p>V razdelku »Varnostna kopija« izberi ⋯ in »Izbriši vse podatke na tej napravi«. Aplikacija vpraša dvakrat. Lahko tudi v brskalniku počistiš podatke strani ali odstraniš nameščeno aplikacijo. Brez varnostne kopije podatkov nihče ne more vrniti.</p>
 <h2>Povezave</h2>
 <p>Specifikacija in koda: <a href="https://github.com/stutek/LibrePTNotes">LibrePTNotes na GitHubu</a>.</p>
 </main>

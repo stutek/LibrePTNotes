@@ -118,7 +118,9 @@ test("izvoz in uvoz zamenjata vse; zavihki neobstoječih strank odpadejo", async
   await store.openTab(a.id);
   const data = {
     clients: [{ id: "x", name: "Xena", created: 1 }],
-    notes: [{ id: "n", clientId: "x", date: "2026-01-01 08:00", created: 1, text: "novi" }],
+    notes: [
+      { id: "n", clientId: "x", date: "2026-01-01 08:00", created: 1, title: "", text: "novi" },
+    ],
   };
   await store.importData(data);
   assert.deepEqual(await store.exportData(), data);
@@ -281,5 +283,80 @@ test("listNotes bere zapise prek indeksa clientId, ne vseh zapisov", async () =>
     calls,
     [["getAllByIndex", "notes", "clientId", a.id]],
     "brez getAll nad vsemi zapisi",
+  );
+});
+
+test("zapis ima naslov (privzeto prazen), ki se posodobi, besedilo in datum ostaneta", async () => {
+  const { store } = make();
+  const c = await store.addClient("Ana");
+  const note = await store.addNote(c.id, "besedilo");
+  assert.equal(note.title, "");
+  await store.updateNoteFields(note.id, { title: "  Načrt tedna " });
+  const [saved] = await store.listNotes(c.id);
+  assert.equal(saved.title, "Načrt tedna");
+  assert.equal(saved.text, "besedilo");
+  assert.equal(saved.date, note.date);
+  await store.updateNoteFields(note.id, { text: "novo", title: "" });
+  assert.deepEqual(
+    [(await store.listNotes(c.id))[0].text, (await store.listNotes(c.id))[0].title],
+    ["novo", ""],
+  );
+  await assert.rejects(() => store.updateNoteFields(note.id, { id: "x" }), "tuje polje");
+  await assert.rejects(() => store.updateNoteFields("ni", { title: "a" }));
+});
+
+test("povzetki strank: število zapisov in datum zadnjega", async () => {
+  const { store, tick } = make();
+  const a = await store.addClient("Ana");
+  const b = await store.addClient("Bor");
+  await store.addNote(a.id, "a");
+  tick(5);
+  await store.addNote(a.id, "b");
+  const summaries = await store.clientSummaries();
+  assert.deepEqual(summaries[a.id], { count: 2, last: "2026-10-05 09:05" });
+  assert.deepEqual(summaries[b.id], { count: 0, last: "" });
+});
+
+test("namigi: enkrat prikazani namigi se zapomnijo", async () => {
+  const { store } = make();
+  assert.equal(await store.hintDone("gesture"), false);
+  await store.markHintDone("gesture");
+  assert.equal(await store.hintDone("gesture"), true);
+  assert.equal(await store.hintDone("privacy"), false);
+});
+
+test("izbriši vse podatke: stranke, zapisi, zavihki, namigi in ključ kopije izginejo", async () => {
+  const { store } = make();
+  const c = await store.addClient("Ana");
+  await store.addNote(c.id, "x");
+  await store.openTab(c.id);
+  await store.markHintDone("gesture");
+  await store.backend.put("meta", { key: "backupKey", value: { setAt: 1 } });
+  await store.deleteAllData();
+  assert.deepEqual(await store.exportData(), { clients: [], notes: [] });
+  assert.deepEqual(await store.getTabs(), { open: [], active: null });
+  assert.equal(await store.hintDone("gesture"), false);
+  assert.equal(await store.backend.get("meta", "backupKey"), undefined);
+});
+
+test("izvoz in uvoz prenašata naslov; stara datoteka brez naslova dobi prazen naslov", async () => {
+  const { store } = make();
+  await store.importData({
+    clients: [{ id: "x", name: "X", created: 1 }],
+    notes: [
+      { id: "a", clientId: "x", date: "2026-01-01 08:00", created: 1, text: "t", title: "Naslov" },
+      { id: "b", clientId: "x", date: "2026-01-02 08:00", created: 2, text: "t" },
+    ],
+  });
+  const notes = (await store.exportData()).notes;
+  assert.deepEqual(
+    notes.map((n) => n.title),
+    ["Naslov", ""],
+  );
+  await assert.rejects(() =>
+    store.importData({
+      clients: [{ id: "x", name: "X" }],
+      notes: [{ id: "a", clientId: "x", date: "d", text: "t", title: 5 }],
+    }),
   );
 });

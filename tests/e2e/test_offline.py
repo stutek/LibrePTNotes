@@ -47,9 +47,9 @@ def test_zagon_in_delo_brez_povezave(page, context, base_url):
     page.reload()
     expect(page.locator("#client-name")).to_be_visible()
     page.locator("#client-name").fill("Ana")
-    page.get_by_role("button", name="Dodaj stranko").click()
-    page.get_by_role("button", name="Odpri beležke stranke").click()
-    page.get_by_role("button", name="Nov zapis").click()
+    page.locator(
+        ".add-client button[type=submit]"
+    ).click()  # prva stranka sama odpre prvi zapis
     page.locator(".plan-peek-blanket .md-input").fill("zapisano v kleti brez signala")
     wait_for_saved(page, "Ana", ["zapisano v kleti brez signala"])
 

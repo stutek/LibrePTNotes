@@ -3,12 +3,20 @@ import { idbBackend, openDb } from "./data/idbBackend.js";
 import { requestDurableStorage } from "./data/storageDurability.js";
 // Vstopna točka LibrePTNotes: shramba, zavihki in pogled. Stanje je v shrambi (IndexedDB), ne tukaj.
 import { createStore } from "./data/store.js";
+import { formatDateTime } from "./domain/dates.js";
+import { clientToMarkdown, safeFileName } from "./domain/exportText.js";
 import { t } from "./i18n.js";
 import { renderAboutSection } from "./ui/aboutSection.js";
 import { renderBackupSection } from "./ui/backupSection.js";
 import { renderClientList } from "./ui/clientList.js";
-import { el } from "./ui/dom.js";
-import { flushPendingSave, onForeignEdit, onSaveResult, renderNoteView } from "./ui/noteView.js";
+import { downloadText, el } from "./ui/dom.js";
+import {
+  flushPendingSave,
+  focusNextNoteView,
+  onForeignEdit,
+  onSaveResult,
+  renderNoteView,
+} from "./ui/noteView.js";
 import { setupPasswordDialog } from "./ui/passwordDialog.js";
 import { renderTabs } from "./ui/tabs.js";
 import { watchForUpdate } from "./ui/updateBar.js";
@@ -45,11 +53,27 @@ async function render(status) {
     await renderNoteView(viewRoot, { t, store, client: active, show: render });
     return;
   }
+  const [summaries, privacyAcked] = await Promise.all([
+    store.clientSummaries(),
+    store.hintDone("privacy"),
+  ]);
   renderClientList(viewRoot, {
     t,
     clients,
+    summaries,
+    showPrivacyNotice: !privacyAcked,
+    onAckPrivacy: async () => {
+      await store.markHintDone("privacy");
+      render();
+    },
     onAdd: async (name) => {
-      await store.addClient(name);
+      const client = await store.addClient(name);
+      if (clients.length === 0) {
+        // Prva stranka: takoj v zapis, pripravljen za pisanje (kot prazen dokument), brez dodatnega koraka.
+        await store.openTab(client.id);
+        await store.addNote(client.id);
+        focusNextNoteView();
+      }
       render();
     },
     onOpen: async (id) => {
@@ -61,6 +85,12 @@ async function render(status) {
       if (name && name !== client.name) await store.renameClient(client.id, name);
       render();
     },
+    onExport: async (client) => {
+      if (!confirm(t("exportConfirm").replace("{name}", client.name))) return;
+      const notes = await store.listNotes(client.id);
+      const text = clientToMarkdown(client, notes, { exportedAt: formatDateTime(new Date()) });
+      downloadText(`${safeFileName(client.name)}.md`, text, "text/markdown");
+    },
     onDelete: async (client) => {
       const notes = (await store.listNotes(client.id)).length;
       if (
@@ -70,7 +100,15 @@ async function render(status) {
       render();
     },
     extra: [
-      await renderBackupSection({ t, store, keyStore, dialog, onChange: render, status }),
+      await renderBackupSection({
+        t,
+        store,
+        keyStore,
+        dialog,
+        onChange: render,
+        status,
+        compact: clients.length === 0,
+      }),
       renderAboutSection({ t }),
     ],
   });

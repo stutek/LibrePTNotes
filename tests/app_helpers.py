@@ -21,7 +21,7 @@ async ({clients, tabs}) => {
     for (const note of client.notes || []) {
       const noteId = note.id || id + "-n" + n++;
       noteIds.push(noteId);
-      await backend.put("notes", { id: noteId, clientId: id, date: note.date, created: created++, text: note.text });
+      await backend.put("notes", { id: noteId, clientId: id, date: note.date, created: created++, text: note.text, ...(note.title ? { title: note.title } : {}) });
     }
     if (client.current !== undefined) await backend.put("meta", { key: "current:" + id, noteId: noteIds[client.current] });
   }
@@ -61,6 +61,32 @@ def seed(page, base_url, clients, tabs=None):
     ids = page.evaluate(SEED_JS, {"clients": clients, "tabs": tabs})
     open_app(page, base_url)
     return ids
+
+
+def client_menu(page, name, item):
+    """Odpre meni stranke (⋯ v njeni vrstici) in tapne postavko (»Preimenuj«, »Izvozi zapise (besedilo)«,
+    »Izbriši stranko«)."""
+    page.get_by_role("button", name=f"Več za stranko: {name}", exact=True).click()
+    page.locator("dialog.sheet[open] .sheet-item", has_text=item).click()
+
+
+def data_menu(page, item):
+    """Odpre meni »Več o podatkih« ob varnostni kopiji in tapne postavko."""
+    page.get_by_role("button", name="Več o podatkih").click()
+    page.locator("dialog.sheet[open] .sheet-item", has_text=item).click()
+
+
+def note_menu(page, item):
+    """Odpre meni zapisa (⋯ v glavi zapisa) in tapne postavko (»Izbriši zapis«)."""
+    page.get_by_role("button", name="Več za zapis").click()
+    page.locator("dialog.sheet[open] .sheet-item", has_text=item).click()
+
+
+def open_client(page, name):
+    """Dotik vrstice stranke odpre njene beležke."""
+    page.get_by_role(
+        "button", name=f"Odpri beležke stranke: {name}", exact=True
+    ).click()
 
 
 def wait_for_service_worker(page):

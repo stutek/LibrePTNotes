@@ -1,4 +1,5 @@
 import { parseDateTime } from "../domain/dates.js";
+import { noteLabel } from "../domain/exportText.js";
 import { sortNotes } from "../domain/notes.js";
 // Pogled zapisov ene stranke: trenutni zapis v urejevalniku z barvanjem markdowna in kretnja L
 // (gesture/planPeek.js, kopija iz LibrePT) za prejšnji/naslednji/nov zapis iste stranke.
@@ -10,10 +11,12 @@ import { sortNotes } from "../domain/notes.js";
 import { initPlanPeek } from "../gesture/planPeek.js";
 import { el } from "./dom.js";
 import { highlightBlock, paintHighlight } from "./highlight.js";
+import { openMenu } from "./menu.js";
 
 // Kratek zamik: zaprtje ali osvežitev strani takoj po tipkanju ne počaka na asinhroni zapis v
-// IndexedDB, zato je okno za izgubo besedila toliko krajše (raziskovalno testiranje: do ~0,4 s).
-const SAVE_DELAY_MS = 200;
+// IndexedDB, zato je okno za izgubo besedila toliko krajše (raziskovalno testiranje: do ~0,4 s; zdaj brez
+// zamika: zapis steče v naslednjem opravilu, več dogodkov v istem opravilu se združi v enega).
+const SAVE_DELAY_MS = 0;
 
 // Neuspešen zapis (brskalnik je zaprl ali izbrisal bazo) mora biti viden: tipkanje sicer izgleda
 // shranjeno, po osvežitvi pa je vse izgubljeno. `report(napaka)` ob uspehu dobi null.
@@ -48,14 +51,14 @@ channel?.addEventListener("message", (event) => {
 });
 
 // Neshranjeno besedilo; izplakne se pred menjavo zapisa, ob skritju strani in ob zaprtju.
-let pending = null; // { store, id, text, timer }
+let pending = null; // { store, id, patch: {text?, title?}, timer }
 
 export async function flushPendingSave() {
   if (!pending) return;
-  const { store, id, text, timer } = pending;
+  const { store, id, patch, timer } = pending;
   pending = null;
   clearTimeout(timer);
-  if (await guarded(store.updateNoteText(id, text))) channel?.postMessage({ noteId: id });
+  if (await guarded(store.updateNoteFields(id, patch))) channel?.postMessage({ noteId: id });
 }
 
 // Zapis, ki ga brišemo, ne sme več dobiti shranjevanja iz čakalne vrste.
@@ -64,9 +67,12 @@ function discardPendingSave() {
   pending = null;
 }
 
-function queueSave(store, id, text) {
+// Besedilo in naslov istega zapisa se združita v en zapis; ob menjavi zapisa se prejšnji izplakne.
+function queueSave(store, id, patch) {
+  if (pending && pending.id !== id) flushPendingSave();
+  const merged = { ...(pending?.id === id ? pending.patch : {}), ...patch };
   if (pending) clearTimeout(pending.timer);
-  pending = { store, id, text, timer: setTimeout(flushPendingSave, SAVE_DELAY_MS) };
+  pending = { store, id, patch: merged, timer: setTimeout(flushPendingSave, SAVE_DELAY_MS) };
 }
 
 addEventListener("pagehide", flushPendingSave);
@@ -76,9 +82,22 @@ document.addEventListener(
 );
 
 // Stanje pogleda: kar kretnja potrebuje sinhrono.
-const view = { t: null, store: null, client: null, notes: [], currentId: null, show: null };
+const view = {
+  t: null,
+  store: null,
+  client: null,
+  notes: [],
+  currentId: null,
+  show: null,
+  gestureHint: false, // namig o kretnji, dokler ga trener ne potrdi ali kretnje ne uporabi
+};
 let host = null;
 let focusAfterRender = false;
+
+/** Naslednji izris zapisa fokusira besedilo (npr. po prvi stranki). */
+export function focusNextNoteView() {
+  focusAfterRender = true;
+}
 
 function underLayer(side) {
   return el("div", {
@@ -92,25 +111,8 @@ function getHost() {
   const blanket = el("div", { cls: "plan-peek-blanket", attrs: { id: "note-blanket" } });
   const past = underLayer("past");
   const future = underLayer("future");
-  // Gumb za brisanje je zunaj blanketa: pritisk nanj ne začne kretnje L.
-  const toolbar = el(
-    "div",
-    { cls: "note-toolbar" },
-    el("span", { cls: "note-hint", text: view.t("noteHint") }),
-    el("button", {
-      cls: "delete-note danger",
-      text: view.t("deleteNote"),
-      attrs: { type: "button" },
-      on: { click: deleteCurrent },
-    }),
-  );
   host = {
-    root: el(
-      "div",
-      { cls: "note-page" },
-      toolbar,
-      el("div", { cls: "peek-host" }, blanket, past, future),
-    ),
+    root: el("div", { cls: "note-page" }, el("div", { cls: "peek-host" }, blanket, past, future)),
     blanket,
     past,
     future,
@@ -140,12 +142,21 @@ async function deleteCurrent() {
   view.show();
 }
 
+// Kretnja je bila uporabljena (ali potrjen namig): namiga ni več treba kazati.
+function dismissGestureHint() {
+  if (!view.gestureHint) return;
+  view.gestureHint = false;
+  document.querySelector(".coach")?.remove();
+  guarded(view.store.markHintDone("gesture"));
+}
+
 function currentIndex() {
   return view.notes.findIndex((n) => n.id === view.currentId);
 }
 
 function openSide(side) {
   endDateEdit({ apply: true });
+  dismissGestureHint();
   const index = currentIndex();
   const target = view.notes[index + (side === "past" ? -1 : 1)];
   if (target) {
@@ -179,7 +190,7 @@ function buildEditor(note) {
   input.addEventListener("input", () => {
     note.text = input.value; // v pomnilniku, da spodnji plasti pokažeta sveže besedilo
     paintHighlight(pre, input.value);
-    queueSave(view.store, note.id, input.value);
+    queueSave(view.store, note.id, { text: input.value });
   });
   return { wrap: el("div", { cls: "md-wrap" }, pre, input), input };
 }
@@ -204,8 +215,8 @@ function paintUnder(layer, side, note) {
       el(
         "div",
         { cls: "plan-peek-under-head" },
-        el("strong", { cls: "plan-peek-under-title", text: note.date }),
-        el("span", { cls: "plan-peek-under-meta", text: client.name }),
+        el("strong", { cls: "plan-peek-under-title", text: noteLabel(note) }),
+        el("span", { cls: "plan-peek-under-meta", text: `${note.date} · ${client.name}` }),
       ),
       underLabel(
         `${t(side === "past" ? "peekPrevious" : "peekNext")} · ${note.date}`,
@@ -315,17 +326,74 @@ function paint({ focus = false } = {}) {
   const note = view.notes[index];
   const { wrap, input } = buildEditor(note);
   const head = el("div", { cls: "note-head" });
-  const dateButton = el("button", {
-    cls: "note-date",
-    text: note.date,
-    attrs: { type: "button", "aria-label": `${view.t("dateEditLabel")}: ${note.date}` },
-    on: { click: () => editDate(head, dateButton, note) },
+  const title = el("input", {
+    cls: "note-title",
+    attrs: {
+      type: "text",
+      maxlength: "120",
+      autocomplete: "off",
+      placeholder: view.t("noteTitlePlaceholder"),
+      "aria-label": view.t("noteTitleLabel"),
+    },
   });
-  head.append(
-    dateButton,
-    el("span", { cls: "note-count", text: `${index + 1} / ${view.notes.length}` }),
+  title.value = note.title ?? "";
+  title.addEventListener("input", () => {
+    note.title = title.value.trim();
+    queueSave(view.store, note.id, { title: title.value });
+  });
+  // Enter v naslovu premakne kazalec v besedilo, kot pri dokumentu.
+  title.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+  const menuButton = el("button", {
+    cls: "note-menu",
+    text: "⋯",
+    attrs: { type: "button", "aria-label": view.t("noteMenu") },
+    on: {
+      click: () =>
+        openMenu({
+          title: noteLabel(note),
+          closeLabel: view.t("menuClose"),
+          items: [{ label: view.t("deleteNote"), danger: true, onClick: deleteCurrent }],
+        }),
+    },
+  });
+  // Datum izgleda kot polje, ki se ga da popraviti: okvir in beseda »uredi«, ne le črtkana črta.
+  const dateButton = el(
+    "button",
+    {
+      cls: "note-date",
+      attrs: { type: "button", "aria-label": `${view.t("dateEditLabel")}: ${note.date}` },
+      on: { click: () => editDate(head, dateButton, note) },
+    },
+    el("span", { text: note.date }),
+    el("span", { cls: "note-date-edit", text: view.t("dateEditHint") }),
   );
-  blanket.replaceChildren(head, el("div", { cls: "note-body" }, wrap));
+  head.append(
+    el("div", { cls: "note-head-row" }, title, menuButton),
+    el(
+      "div",
+      { cls: "note-head-row" },
+      dateButton,
+      el("span", { cls: "note-count", text: `${index + 1} / ${view.notes.length}` }),
+    ),
+  );
+  const coach = view.gestureHint
+    ? el(
+        "div",
+        { cls: "coach", attrs: { role: "note" } },
+        el("span", { text: view.t("coachGesture") }),
+        el("button", {
+          text: view.t("coachDone"),
+          attrs: { type: "button" },
+          on: { click: dismissGestureHint },
+        }),
+      )
+    : null;
+  blanket.replaceChildren(head, coach, el("div", { cls: "note-body" }, wrap));
   paintUnder(past, "past", view.notes[index - 1]);
   paintUnder(future, "future", view.notes[index + 1]);
   if (focus) input.focus();
@@ -337,7 +405,15 @@ export async function renderNoteView(root, { t, store, client, show }) {
   await flushPendingSave();
   const notes = await store.listNotes(client.id);
   const note = await store.currentNote(client.id);
-  Object.assign(view, { t, store, client, notes, currentId: note?.id ?? null, show });
+  Object.assign(view, {
+    t,
+    store,
+    client,
+    notes,
+    currentId: note?.id ?? null,
+    show,
+    gestureHint: !(await store.hintDone("gesture")),
+  });
   if (!note) {
     root.replaceChildren(
       el(

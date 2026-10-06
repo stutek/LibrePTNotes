@@ -22,6 +22,7 @@ tags: [index]
 * **[use_cases/uc7_varnostna_kopija.md](use_cases/uc7_varnostna_kopija.md)** — UC7: šifrirana varnostna kopija.
 * **[use_cases/uc8_nova_razlicica.md](use_cases/uc8_nova_razlicica.md)** — UC8: obvestilo o novi različici.
 * **[use_cases/uc9_brisanje_preimenovanje.md](use_cases/uc9_brisanje_preimenovanje.md)** — UC9: brisanje in preimenovanje.
+* **[use_cases/uc10_priprava_in_trening.md](use_cases/uc10_priprava_in_trening.md)** — UC10: priprava načrta in trening (scenarij je tudi prikaz z `DEMO_PAUSE`).
 * **[TODO.md](TODO.md)** — specifikacija, odločitve, odprto delo in koraki. *Tudi:* zahteve, kretnja L, markdown, zavihki.
 * **[src/gesture/](src/gesture/)** — kretnja L, kopija iz LibrePT.
 * **[src/](src/)** — aplikacija, ki se objavi na Pages (brez koraka gradnje).

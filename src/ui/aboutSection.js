@@ -7,7 +7,11 @@ export function renderAboutSection({ t }) {
   return el(
     "footer",
     { cls: "about" },
-    el("a", { cls: "privacy-link", text: t("privacyLink"), attrs: { href: "./privacy.html" } }),
+    el("a", {
+      cls: "privacy-link",
+      text: t("privacyLink"),
+      attrs: { href: "./privacy.html" },
+    }),
     el("span", { cls: "build-info", text: `${t("versionLabel")}: ${formatBuildInfo(BUILD_INFO)}` }),
   );
 }
