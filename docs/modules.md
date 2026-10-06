@@ -32,6 +32,7 @@ Vsak `.js`, `.css` in `.html` pod `src/` je tu z eno vrstico. Sloji uvozov (glej
 
 * [src/data/store.js](../src/data/store.js) — shramba strank, zapisov in zavihkov, neodvisna od IndexedDB.
 * [src/data/idbBackend.js](../src/data/idbBackend.js) — tanek backend IndexedDB (baza `libreptnotes`).
+* [src/data/storageDurability.js](../src/data/storageDurability.js) — prošnja brskalniku za trajno shrambo (`navigator.storage.persist`).
 * [src/data/backupFile.js](../src/data/backupFile.js) — vsebina varnostne kopije in obnovitev v šifrirani ovojnici.
 * [src/data/backupEncryption.js](../src/data/backupEncryption.js) — šifrirana ovojnica kopije, zapis LibrePT.
 * [src/data/passphraseKey.js](../src/data/passphraseKey.js) — ključ AES-GCM iz gesla (PBKDF2).

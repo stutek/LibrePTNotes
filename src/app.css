@@ -605,3 +605,13 @@ input.note-date-input.is-invalid:focus {
 .plan-peek-under .md-highlight {
   padding: 0 4px;
 }
+
+.storage-error {
+  margin: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--border-radius-lg);
+  background: var(--danger-light);
+  color: var(--danger);
+  font-weight: 600;
+}

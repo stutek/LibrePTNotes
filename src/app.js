@@ -1,11 +1,13 @@
 import { createBackupKeyStore } from "./data/backupKeyStore.js";
 import { idbBackend, openDb } from "./data/idbBackend.js";
+import { requestDurableStorage } from "./data/storageDurability.js";
 // Vstopna točka LibrePTNotes: shramba, zavihki in pogled. Stanje je v shrambi (IndexedDB), ne tukaj.
 import { createStore } from "./data/store.js";
 import { t } from "./i18n.js";
 import { renderAboutSection } from "./ui/aboutSection.js";
 import { renderBackupSection } from "./ui/backupSection.js";
 import { renderClientList } from "./ui/clientList.js";
+import { el } from "./ui/dom.js";
 import { flushPendingSave, renderNoteView } from "./ui/noteView.js";
 import { setupPasswordDialog } from "./ui/passwordDialog.js";
 import { renderTabs } from "./ui/tabs.js";
@@ -70,8 +72,23 @@ async function render(status) {
   });
 }
 
+// Brez IndexedDB (zasebno okno, onemogočena shramba) aplikacija ne more shraniti ničesar: to je treba
+// povedati, ne pokazati prazne strani.
+function showStorageError() {
+  viewRoot.replaceChildren(
+    el("p", { cls: "storage-error", text: t("storageUnavailable"), attrs: { role: "alert" } }),
+  );
+}
+
 async function start() {
-  const backend = idbBackend(await openDb());
+  let backend;
+  try {
+    backend = idbBackend(await openDb());
+  } catch {
+    showStorageError();
+    return;
+  }
+  requestDurableStorage();
   store = createStore(backend);
   keyStore = createBackupKeyStore(backend);
   dialog = setupPasswordDialog({ t, keyStore });

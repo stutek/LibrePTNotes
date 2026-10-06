@@ -19,3 +19,4 @@ V telovadnici ni signala. Aplikacija se po prvem obisku zažene in dela brez pov
 | Podatki ostanejo v brskalniku in ne gredo na strežnik | [test_offline.py](../tests/e2e/test_offline.py) |
 | Predpomnilnik se imenuje `libreptnotes-v<N>`, poti so relativne, manifest ima svoje ime | [sw.test.mjs](../tests/unit_js/sw/sw.test.mjs) |
 | Baza in predpomnilnik ne trčita z LibrePT | [test_flow.py](../tests/e2e/test_flow.py) |
+| Aplikacija zaprosi trajno shrambo; brez IndexedDB pove razlog namesto prazne strani | [storageDurability.test.mjs](../tests/unit_js/data/storageDurability.test.mjs), [test_audit.py](../tests/e2e/test_audit.py) |
